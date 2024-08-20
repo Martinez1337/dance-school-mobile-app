@@ -1,0 +1,101 @@
+[
+  {
+    "id": "5d5d7a89-9b4f-4c1e-b2f7-5d20c9f1a72b",
+    "name": "Основы хип-хопа",
+    "description": "Группа для начинающих, изучающих базовые элементы хип-хопа.",
+    "level": "Beginner",
+    "maxStudentCapacity": 20,
+    "teacher": {
+      "id": "db8754e3-efc5-4af0-9e72-0d96e5a3d523",
+      "firstName": "Сергей",
+      "lastName": "Иванов",
+      "middleName": "Петрович"
+    },
+    "students": [
+      {
+        "id": "04f4b83e-7a10-4f30-a0f3-d8b53e1bdb62",
+        "firstName": "Ольга",
+        "lastName": "Петрова",
+        "middleName": "Викторовна"
+      },
+      {
+        "id": "4f8bdc14-cbc8-4aeb-8c6f-2958e1590192",
+        "firstName": "Елена",
+        "lastName": "Андреева",
+        "middleName": "Сергеевна"
+      },
+      {
+        "id": "015e7b47-56f5-4fd7-928f-b2b19ab4fddb",
+        "firstName": "Татьяна",
+        "lastName": "Морозова",
+        "middleName": "Александровна"
+      }
+    ]
+  },
+  {
+    "id": "7c3a9b1f-2e65-4a62-9b1b-3a5b62215d97",
+    "name": "Основы контемпорари",
+    "description": "Группа для изучения основ контемпорари танца.",
+    "level": "Intermediate",
+    "maxStudentCapacity": 15,
+    "teacher": {
+      "id": "1b2c3d4e-5f67-4a89-b5c4-e7d8f4c9baff",
+      "firstName": "Андрей",
+      "lastName": "Павлов",
+      "middleName": "Алексеевич"
+    },
+    "students": [
+      {
+        "id": "a6d8d5f2-90d7-4af7-9753-cb91335bcb88",
+        "firstName": "Дмитрий",
+        "lastName": "Николаев",
+        "middleName": "Андреевич"
+      },
+      {
+        "id": "70e5a7cb-8a7a-4f2d-a48e-d2b639d2874c",
+        "firstName": "Илья",
+        "lastName": "Семенов",
+        "middleName": "Константинович"
+      },
+      {
+        "id": "f7b8d3e9-9f5b-4f78-8b5c-1dbb9492991a",
+        "firstName": "Мария",
+        "lastName": "Смирнова",
+        "middleName": "Александровна"
+      }
+    ]
+  },
+  {
+    "id": "9f6e1c54-7e1c-4f65-9146-2f92f60c0aab",
+    "name": "Латиноамериканские танцы",
+    "description": "Группа для изучения латиноамериканских танцев, таких как сальса и бачата.",
+    "level": "Advanced",
+    "maxStudentCapacity": 12,
+    "teacher": {
+      "id": "f5b9279e-7d42-4e7b-bb2e-63a4f1b7cf0a",
+      "firstName": "Екатерина",
+      "lastName": "Власова",
+      "middleName": "Игоревна"
+    },
+    "students": [
+      {
+        "id": "d4e5f6a3-c9bb-4b94-8e7b-5d8f94962d98",
+        "firstName": "Анна",
+        "lastName": "Федорова",
+        "middleName": "Владимировна"
+      },
+      {
+        "id": "84f5f86d-6e79-44d9-8a8f-3d2c92c5d012",
+        "firstName": "Алексей",
+        "lastName": "Сидоров",
+        "middleName": "Иванович"
+      },
+      {
+        "id": "92edc4d1-986b-4df8-9533-d946b71b0658",
+        "firstName": "Петр",
+        "lastName": "Васильев",
+        "middleName": "Дмитриевич"
+      }
+    ]
+  }
+]

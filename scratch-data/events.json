@@ -1,0 +1,42 @@
+[
+  {
+    "id": "20d36c81-fe95-4f00-97f8-8a9c5c1a2f3f",
+    "name": "Открытый урок по хип-хопу",
+    "description": "Бесплатный мастер-класс по основам хип-хоп танца.",
+    "startTime": "2024-08-12T18:00:00Z",
+    "picture": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQCD2KHmsqFCUQqx3SpEvE9sM2jOb5S93Hc9Q&s",
+    "eventType": "Workshop"
+  },
+  {
+    "id": "44b91c21-d1c7-4a59-8519-9c5405aeb8fa",
+    "name": "Семинар по бальным танцам",
+    "description": "Углубленное изучение техник бальных танцев с приглашенным тренером.",
+    "startTime": "2024-09-05T14:00:00Z",
+    "picture": "https://optim.tildacdn.com/tild6633-3162-4838-b130-623335343538/-/resize/744x/-/format/webp/92c3523de61d06eebdc5.jpg",
+    "eventType": "Seminar"
+  },
+  {
+    "id": "59c21b7d-f406-4b65-af6b-66979c6bc4c5",
+    "name": "Конкурс по сальсе",
+    "description": "Ежегодный конкурс сальсы среди студентов школы.",
+    "startTime": "2024-10-22T16:00:00Z",
+    "picture": "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQx_nn003CPzyf8iRftUTWCNgJ9cGYNtXVuMg&s",
+    "eventType": "Competition"
+  },
+  {
+    "id": "f4f4a619-64f9-46a4-a359-0a6476587088",
+    "name": "Вечер латиноамериканских танцев",
+    "description": "Вечерние танцы в стиле бачата и сальса для всех желающих.",
+    "startTime": "2024-08-30T20:00:00Z",
+    "picture": "https://dance-school.moscow/s/img/wp-content/uploads/2016/05/latina.png",
+    "eventType": "Party"
+  },
+  {
+    "id": "61f9a540-3678-4029-b18b-e33922ef5bd8",
+    "name": "Интенсив по контемпорари",
+    "description": "Интенсивный курс по технике контемпорари для продвинутых танцоров.",
+    "startTime": "2024-11-10T10:00:00Z",
+    "picture": "https://baletka.by/img/dance/contemp_3.jpg",
+    "eventType": "Workshop"
+  }
+]

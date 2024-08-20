@@ -1,0 +1,57 @@
+[
+  {
+    "name": "Основы хип-хопа",
+    "description": "Первое занятие по основам хип-хопа.",
+    "lessonType": "Individual",
+    "startTime": "2024-08-15T17:00:00.000Z",
+    "finishTime": "2024-08-15T18:00:00.000Z",
+    "classroomId": "3b2f8d1a-5e87-4e3a-8f3d-d9f20e83a1c5",
+    "teacherId": "db8754e3-efc5-4af0-9e72-0d96e5a3d523",
+    "studentId": "04f4b83e-7a10-4f30-a0f3-d8b53e1bdb62",
+    "groupId": null
+  },
+  {
+    "name": "Урок по контемпорари",
+    "description": "Групповое занятие по контемпорари танцу.",
+    "lessonType": "Group",
+    "startTime": "2024-08-16T15:00:00.000Z",
+    "finishTime": "2024-08-16T16:30:00.000Z",
+    "classroomId": "7aebc2f5-0a2f-4c8e-bb6b-f4b5d1b8c22e",
+    "teacherId": "1b2c3d4e-5f67-4a89-b5c4-e7d8f4c9baff",
+    "studentId": null,
+    "groupId": "7c3a9b1f-2e65-4a62-9b1b-3a5b62215d97"
+  },
+  {
+    "name": "Сальса для начинающих",
+    "description": "Индивидуальные занятия по сальсе для новичков.",
+    "lessonType": "Individual",
+    "startTime": "2024-08-17T18:00:00.000Z",
+    "finishTime": "2024-08-17T19:00:00.000Z",
+    "classroomId": "9b73b7c1-0db2-4a99-8e74-2b845bd3e4f6",
+    "teacherId": "f5b9279e-7d42-4e7b-bb2e-63a4f1b7cf0a",
+    "studentId": "015e7b47-56f5-4fd7-928f-b2b19ab4fddb",
+    "groupId": null
+  },
+  {
+    "name": "Современный танец",
+    "description": "Групповое занятие по современному танцу.",
+    "lessonType": "Group",
+    "startTime": "2024-08-18T20:00:00.000Z",
+    "finishTime": "2024-08-18T21:30:00.000Z",
+    "classroomId": "2a5c6d8e-9f7b-4e9f-bd1e-5dff3b7c2e3a",
+    "teacherId": "db8754e3-efc5-4af0-9e72-0d96e5a3d523",
+    "studentId": null,
+    "groupId": "5d5d7a89-9b4f-4c1e-b2f7-5d20c9f1a72b"
+  },
+  {
+    "name": "Основы брейк-данса",
+    "description": "Индивидуальное занятие по брейк-дансу для продвинутых.",
+    "lessonType": "Individual",
+    "startTime": "2024-08-19T16:30:00.000Z",
+    "finishTime": "2024-08-19T18:00:00.000Z",
+    "classroomId": "1f4e3a8d-7c9e-4b0e-b63f-c7d8b4a1e2c4",
+    "teacherId": "1b2c3d4e-5f67-4a89-b5c4-e7d8f4c9baff",
+    "studentId": "92edc4d1-986b-4df8-9533-d946b71b0658",
+    "groupId": null
+  }
+]
