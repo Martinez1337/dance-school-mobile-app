@@ -1,12 +1,12 @@
 import {SafeAreaView, StyleSheet, Text} from 'react-native'
 import { Link } from "expo-router";
 
-const Index = () => {
+const Temp = () => {
     return (
         <SafeAreaView style={styles.container}>
-            <Text>Elcentro App</Text>
-            <Link href={"/(tabs)"} style={{color: "blue"}}>Go to TabsScreen</Link>
-            <Link href={"/(auth)"} style={{color: "blue"}}>Go to AuthScreen</Link>
+            {/*<Text>Elcentro App</Text>*/}
+            {/*<Link replace href={"/(tabs)"} style={{color: "blue"}}>Go to TabsScreen</Link>*/}
+            {/*<Link replace href={"/(auth)"} style={{color: "blue"}}>Go to AuthScreen</Link>*/}
         </SafeAreaView>
     )
 }
@@ -20,4 +20,4 @@ const styles = StyleSheet.create({
     }
 })
 
-export default Index;
+export default Temp;
