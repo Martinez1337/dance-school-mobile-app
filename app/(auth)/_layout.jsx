@@ -20,7 +20,7 @@ const AuthLayout = () => {
           title: "Регистрация",
           headerLeft: () => (
             <TouchableOpacity style={globalStyles.backButton} onPress={() => router.back()}>
-              <Ionicons name="arrow-back" size={24} color="white"/>
+              <Ionicons name="chevron-back" size={24} color="black"/>
             </TouchableOpacity>
           )
         }}

@@ -26,6 +26,7 @@ const SignUp = () => {
           initialValues={{
             firstName: "",
             lastName: "",
+            middleName: "",
             email: "",
             phoneNumber: "",
             password: "",
@@ -87,7 +88,7 @@ const SignUp = () => {
                 handleBlur={handleBlur}
               />
 
-              <FormField
+              {/* <FormField
                 field="description"
                 label="Скажи пару слов о себе"
                 values={values}
@@ -95,7 +96,7 @@ const SignUp = () => {
                 errors={errors}
                 handleChange={handleChange}
                 handleBlur={handleBlur}
-              />
+              /> */}
 
               <FormField
                 field="phoneNumber"
@@ -109,7 +110,7 @@ const SignUp = () => {
 
               <FormField
                 field="password"
-                label="Придумай пароль"
+                label="Пароль"
                 secureTextEntry={true}
                 values={values}
                 touched={touched}
@@ -134,7 +135,7 @@ const SignUp = () => {
                   style={[
                     globalStyles.submitButton,
                     {
-                      opacity: isFormValid(isValid, touched) ? 1 : 0.6,
+                      opacity: isFormValid(isValid, touched) ? 1 : 0.4,
                     }
                   ]}
                 >

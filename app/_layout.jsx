@@ -1,8 +1,10 @@
-import * as SplashScreen from 'expo-splash-screen';
-import {Slot, Stack} from 'expo-router';
+import {Text} from "react-native";
+import {Redirect, Slot} from "expo-router";
 import React, {useEffect, useState} from 'react';
 import {useFonts} from 'expo-font';
+import * as SplashScreen from 'expo-splash-screen';
 import {SessionProvider} from "../context/ctx";
+import {useSession} from "../context/ctx";
 import {StatusBar} from "expo-status-bar";
 
 SplashScreen.preventAutoHideAsync();

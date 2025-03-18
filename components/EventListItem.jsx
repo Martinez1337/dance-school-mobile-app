@@ -39,10 +39,15 @@ const styles = StyleSheet.create({
   cardContainer: {
     height: 150,
     flexDirection: "row",
-    borderWidth: 1,
-    borderColor: "rgba(158, 150, 150, .3)",
-    borderRadius: 15,
     marginHorizontal: 5,
+    borderRadius: 15,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 2,
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
   },
   image: {
     height: '100%',

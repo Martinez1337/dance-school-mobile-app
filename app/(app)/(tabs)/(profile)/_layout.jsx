@@ -8,10 +8,11 @@ import {useSession} from "../../../../context/ctx";
 const ProfileLayout = () => {
   const router = useRouter();
   const { signOut } = useSession()
+
   return (
     <Stack
       screenOptions={{
-        headerShown: false,
+        headerShown: true,
         headerStyle: {backgroundColor: HEADER_BACKGROUND},
         headerTitleStyle: globalStyles.headerText,
         headerTitleAlign: "center",
@@ -24,9 +25,20 @@ const ProfileLayout = () => {
           headerRight: () => (
             <TouchableOpacity
               style={{marginRight: 5}}
-              onPress={() => router.push("/settings")}
+              onPress={() => {
+                signOut();
+                // router.push("/settings")
+              }}
             >
-              <Ionicons name="settings-outline" size={24} color="white"/>
+              <Ionicons name="log-out-outline" size={24} color="black"/>
+            </TouchableOpacity>
+          ),
+          headerLeft: () => (
+            <TouchableOpacity 
+              onPress={() => router.push('/(app)/(shared)/my-groups')}
+              style={{marginLeft: 5}}
+            >
+              <Ionicons name="people-outline" size={24} color="black"/>
             </TouchableOpacity>
           )
         }}
@@ -37,7 +49,7 @@ const ProfileLayout = () => {
           title: "Настройки",
           headerLeft: () => (
             <TouchableOpacity style={globalStyles.backButton} onPress={() => router.back()}>
-              <Ionicons name="arrow-back" size={24} color="white"/>
+              <Ionicons name="arrow-back" size={24} color="black"/>
             </TouchableOpacity>
           )
         }}

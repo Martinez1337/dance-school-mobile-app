@@ -28,7 +28,7 @@ const CustomCalendar = ({selectedDate, setSelectedDate, markedDates}) => {
         [selectedDate]: {selected: true, selectedColor: '#d903e4'},
       }}
       monthFormat={'MMMM yyyy'}
-      firstDay={1} // Понедельник первым днем недели
+      firstDay={1} // Понедельник - первый день недели
       theme={{
         todayTextColor: "#d903e4",
         arrowColor: "#d903e4",

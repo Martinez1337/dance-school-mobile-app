@@ -1,8 +1,9 @@
 import {StyleSheet} from "react-native";
 import Constants from "expo-constants";
 
-export const HEADER_BACKGROUND = "#000000";
+export const HEADER_BACKGROUND = "#ffffff";
 export const CONTENT_BACKGROUND = "#f9f9f9";
+export const BOTTOM_TAB_BACKGROUND = "#000000";
 
 export const globalStyles = StyleSheet.create({
   mainSafeArea: {
@@ -21,7 +22,7 @@ export const globalStyles = StyleSheet.create({
     backgroundColor: HEADER_BACKGROUND,
   },
   headerText: {
-    color: "#fff",
+    color: "#000000",
     fontSize: 18,
     fontFamily: "os-bold",
   },
@@ -57,13 +58,13 @@ export const globalStyles = StyleSheet.create({
   },
   signInButton: {
     marginTop: 20,
-    backgroundColor: HEADER_BACKGROUND,
+    backgroundColor: "#d903e4",
     padding: 15,
     borderRadius: 15,
   },
   submitButton: {
     marginTop: 20,
-    backgroundColor: HEADER_BACKGROUND,
+    backgroundColor: "#d903e4",
     padding: 15,
     borderRadius: 15,
   },
@@ -96,7 +97,8 @@ export const globalStyles = StyleSheet.create({
   searchTextInput: {
     flex: 1,
     fontFamily: "os-regular",
-    fontSize: 15
+    fontSize: 15,
+    marginLeft: 10
   },
   backButton: {
     flexDirection: 'row',

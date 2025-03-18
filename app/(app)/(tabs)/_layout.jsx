@@ -1,11 +1,16 @@
-import FontAwesome from '@expo/vector-icons/FontAwesome';
 import Octicons from '@expo/vector-icons/Octicons';
-import {Tabs} from 'expo-router';
-import {globalStyles, HEADER_BACKGROUND} from "../../../styles/globalStyles";
-import {useState} from "react";
+import { Tabs } from 'expo-router';
+import { globalStyles, HEADER_BACKGROUND, BOTTOM_TAB_BACKGROUND } from "../../../styles/globalStyles";
+import { useSession } from "../../../context/ctx";
+import { useState, useEffect } from "react";
 
 const TabsLayout = () => {
-  const [role, setRole] = useState("student");
+  const { session } = useSession();
+  const [role, setRole] = useState(session);
+
+  useEffect(() => {
+    setRole(session);
+  }, [session]);
 
   return (
     <Tabs
@@ -22,8 +27,8 @@ const TabsLayout = () => {
           fontSize: 10,
           paddingTop: 5,
         },
-        tabBarStyle: {backgroundColor: HEADER_BACKGROUND, paddingTop: 5},
-        tabBarInactiveBackgroundColor: HEADER_BACKGROUND
+        tabBarStyle: {backgroundColor: BOTTOM_TAB_BACKGROUND, paddingTop: 5},
+        tabBarInactiveBackgroundColor: BOTTOM_TAB_BACKGROUND
       }}
       backBehavior={"history"}
       initialRouteName={"index"}
@@ -32,7 +37,7 @@ const TabsLayout = () => {
         name="events"
         options={{
           title: "Мероприятия",
-          tabBarIcon: ({color}) => <Octicons name="feed-star" size={28} color={color} />,
+          tabBarIcon: ({color}) => <Octicons name="star" size={28} color={color} />,
         }}
       />
       <Tabs.Screen
@@ -43,12 +48,20 @@ const TabsLayout = () => {
         }}
       />
       <Tabs.Screen
-        name="temp"
+        name={"(student)"}
         options={{
-          title: "temp",
-          tabBarIcon: ({color}) => <FontAwesome size={28} name="star" color={color} />,
+          title: "Записаться на занятие",
+          tabBarIcon: ({color}) => <Octicons name="repo" size={28} color={color} />,
         }}
-        redirect={role === "teacher"} /* Это один из способов ограничить функционал по ролям */
+        redirect={role !== "Student"}
+      />
+      <Tabs.Screen
+        name={"(teacher)"}
+        options={{
+          title: "Управление занятиями",
+          tabBarIcon: ({color}) => <Octicons name="checklist" size={28} color={color} />,
+        }}
+        redirect={role !== "Teacher"}
       />
       <Tabs.Screen
         name="(profile)"

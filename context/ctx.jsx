@@ -27,13 +27,13 @@ export function SessionProvider({children}) {
     <AuthContext.Provider
       value={{
         signIn: (value) => {
-          setSession('xxx');
+          setSession(value);
         },
         signOut: () => {
           setSession(null);
         },
         session,
-        isLoading,
+        isLoading
       }}>
       {children}
     </AuthContext.Provider>

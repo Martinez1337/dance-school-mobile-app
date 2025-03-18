@@ -1,5 +1,5 @@
 import {Text} from "react-native";
-import {Redirect, Slot} from "expo-router";
+import {Redirect, Stack} from "expo-router";
 import {useSession} from "../../context/ctx";
 
 export default function AppLayout() {
@@ -7,7 +7,7 @@ export default function AppLayout() {
 
   if (isLoading) {
     console.log("Session loading...")
-    // Consider replacing with a proper LoadingScreen component
+    // todo: add loading screen
     return <Text>Loading...</Text>;
   }
 
@@ -18,5 +18,10 @@ export default function AppLayout() {
 
   console.log(`Entering session ${session}`)
 
-  return <Slot />;
+  return (
+    <Stack screenOptions={{headerShown: false}}>
+      <Stack.Screen name="(tabs)" />
+      <Stack.Screen name="(shared)" />
+    </Stack>
+  );
 }

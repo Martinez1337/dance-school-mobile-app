@@ -29,8 +29,8 @@ const Index = () => {
             email: "",
             password: "",
           }}
-          onSubmit={(values) => {
-            signIn(values)
+          onSubmit={() => {
+            signIn("Student");
             router.replace("/(tabs)/(profile)");
           }}
           validationSchema={authorizationValidationSchema}
@@ -71,7 +71,7 @@ const Index = () => {
                   style={[
                     globalStyles.signInButton,
                     {
-                      opacity: isFormValid(isValid, touched) ? 1 : 0.6,
+                      opacity: isFormValid(isValid, touched) ? 1 : 0.4,
                     }
                   ]}
                 >
