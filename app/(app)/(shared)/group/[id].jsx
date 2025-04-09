@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, StyleSheet, SafeAreaView, ScrollView, Alert } from 'react-native';
 import { Stack, router, useLocalSearchParams } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -55,7 +55,6 @@ const GroupScreen = () => {
   };
 
   const handleConfirmDelete = () => {
-    // В реальном приложении здесь будет логика удаления студента из группы
     console.log('Удаление студента:', studentToDelete.id);
     
     // Обновляем состояние группы, удаляя студента
@@ -77,7 +76,6 @@ const GroupScreen = () => {
   };
 
   const handleStudentPress = (student) => {
-    // Переход на профиль студента
     console.log('Переход на профиль студента:', student.id);
     router.push(`/profile/${student.id}`);
   };
@@ -186,4 +184,4 @@ const styles = StyleSheet.create({
   }
 });
 
-export default GroupScreen; 
+export default GroupScreen;

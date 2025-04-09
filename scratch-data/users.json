@@ -30,7 +30,7 @@
     "lastName": "Сидоров",
     "middleName": "Иванович",
     "phoneNumber": "+79993456789",
-    "photo": "https://randomuser.me/api/portraits/men/3.jpg",
+    "photo": "https://randomuser.me/api/portraits/men/88.jpg",
     "role": "Student",
     "description": "Занимается бальными танцами уже несколько лет.",
     "level": "Продвинутый"
@@ -54,7 +54,7 @@
     "lastName": "Васильев",
     "middleName": "Дмитриевич",
     "phoneNumber": "+79995678901",
-    "photo": "https://randomuser.me/api/portraits/men/5.jpg",
+    "photo": "https://randomuser.me/api/portraits/men/9.jpg",
     "role": "Student",
     "description": "Стремится овладеть брейк-дансом и уличными стилями.",
     "level": "Продвинутый"
@@ -66,7 +66,7 @@
     "lastName": "Андреева",
     "middleName": "Сергеевна",
     "phoneNumber": "+79996789012",
-    "photo": "https://randomuser.me/api/portraits/women/6.jpg",
+    "photo": "https://randomuser.me/api/portraits/women/19.jpg",
     "role": "Student",
     "description": "Новичок в танцевальных стилях, изучает основы балета.",
     "level": "Начальный"
@@ -78,7 +78,7 @@
     "lastName": "Николаев",
     "middleName": "Андреевич",
     "phoneNumber": "+79997890123",
-    "photo": "https://randomuser.me/api/portraits/men/7.jpg",
+    "photo": "https://randomuser.me/api/portraits/men/36.jpg",
     "role": "Student",
     "description": "Увлекается фламенко и народными танцами.",
     "level": "Средний"
@@ -102,7 +102,7 @@
     "lastName": "Семенов",
     "middleName": "Константинович",
     "phoneNumber": "+79999012345",
-    "photo": "https://randomuser.me/api/portraits/men/9.jpg",
+    "photo": "https://randomuser.me/api/portraits/men/34.jpg",
     "role": "Student",
     "description": "Любит уличные танцы, особенно хип-хоп.",
     "level": "Средний"
@@ -126,7 +126,7 @@
     "lastName": "Иванов",
     "middleName": "Петрович",
     "phoneNumber": "+79991234568",
-    "photo": "https://randomuser.me/api/portraits/men/11.jpg",
+    "photo": "https://randomuser.me/api/portraits/men/12.jpg",
     "role": "Teacher",
     "description": "Преподает хип-хоп и уличные танцы с 10-летним опытом."
   },
@@ -148,7 +148,7 @@
     "lastName": "Павлов",
     "middleName": "Алексеевич",
     "phoneNumber": "+79993456780",
-    "photo": "https://randomuser.me/api/portraits/men/13.jpg",
+    "photo": "https://randomuser.me/api/portraits/men/15.jpg",
     "role": "Teacher",
     "description": "Специалист по контемпорари и джаз-фанку с 5-летним опытом."
   },

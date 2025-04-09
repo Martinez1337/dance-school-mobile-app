@@ -41,14 +41,11 @@ const LessonRequestScreen = () => {
   const handleConfirm = () => {
     setConfirmationVisible(false);
     if (actionType === 'accept' && !selectedHall) {
-      // Показываем ошибку, если зал не выбран при принятии заявки
       return;
     }
-    // Здесь будет логика принятия/отклонения заявки
     router.back();
   };
 
-  // Получение названия выбранного зала
   const getSelectedHallName = () => {
     const hall = halls.find(h => h.id === selectedHall);
     return hall ? hall.name : 'Выберите зал';

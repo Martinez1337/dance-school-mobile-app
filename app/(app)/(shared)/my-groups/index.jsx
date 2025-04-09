@@ -39,15 +39,7 @@ export default function MyGroupsScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <Stack.Screen options={{
-        headerTitle: "Мои группы",
-        headerLeft: () => (
-          <TouchableOpacity 
-            style={styles.backButton} 
-            onPress={() => router.back()}
-          >
-            <Ionicons name="chevron-back" size={24} color="black"/>
-          </TouchableOpacity>
-        )
+        headerTitle: "Мои группы"
       }}/>
 
       {userGroups.length > 0 ? (

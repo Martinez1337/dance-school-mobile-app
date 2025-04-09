@@ -9,12 +9,14 @@ import users from '../../../../scratch-data/users.json';
 import groups from '../../../../scratch-data/groups.json';
 import classrooms from '../../../../scratch-data/classrooms.json';
 import subscriptions from '../../../../scratch-data/subscriptions.json';
+import {useSession} from "../../../../context/ctx";
 
 export default function LessonScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams();
   const [lessonData, setLessonData] = useState(null);
   const [hasValidSubscription, setHasValidSubscription] = useState(false);
+  const { session } = useSession();
 
   const currentUserId = 'e1a5c879-9a1d-45c2-8f0d-d3442f2dcd1a';
 
@@ -57,7 +59,8 @@ export default function LessonScreen() {
 
   const showJoinButton = 
     lessonData.group && 
-    lessonData.currentStudents < lessonData.maxStudents;
+    lessonData.currentStudents < lessonData.maxStudents &&
+    session === "Student";
 
   const handleJoinGroup = () => {
     console.log('Joining group:', lessonData.group.id);

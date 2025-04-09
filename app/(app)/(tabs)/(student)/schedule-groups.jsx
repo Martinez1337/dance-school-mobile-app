@@ -98,6 +98,24 @@ export default function ScheduleGroups() {
     setSelectedGroups([]);
   };
 
+  const filterData = {
+    teachers: {
+      items: teachers,
+      selectedItems: selectedTeachers,
+      onItemSelect: toggleTeacherSelection
+    },
+    levels: {
+      items: uniqueLevels,
+      selectedItems: selectedLevels,
+      onItemSelect: toggleLevelSelection
+    },
+    groups: {
+      items: groups,
+      selectedItems: selectedGroups,
+      onItemSelect: toggleGroupSelection
+    }
+  };
+
   const totalFiltersCount = selectedTeachers.length + selectedLevels.length + selectedGroups.length;
 
   return (
@@ -151,17 +169,9 @@ export default function ScheduleGroups() {
       <GroupFilterModal
         visible={filterModalVisible}
         onClose={() => setFilterModalVisible(false)}
-        teachers={teachers}
-        selectedTeachers={selectedTeachers}
-        onTeacherSelect={toggleTeacherSelection}
-        levels={uniqueLevels}
-        selectedLevels={selectedLevels}
-        onLevelSelect={toggleLevelSelection}
-        groups={groups}
-        selectedGroups={selectedGroups}
-        onGroupSelect={toggleGroupSelection}
         onReset={resetFilters}
         onApply={() => setFilterModalVisible(false)}
+        filters={filterData}
       />
     </SafeAreaView>
   );

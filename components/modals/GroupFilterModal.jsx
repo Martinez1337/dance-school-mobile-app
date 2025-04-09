@@ -1,6 +1,6 @@
 import { View, Text, Modal, StyleSheet, TouchableOpacity, ScrollView, TouchableWithoutFeedback } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 const FilterTab = ({ title, isActive, onPress }) => (
   <TouchableOpacity 
@@ -13,39 +13,57 @@ const FilterTab = ({ title, isActive, onPress }) => (
   </TouchableOpacity>
 );
 
+const defaultCategoryProps = {
+  items: [],
+  selectedItems: [],
+  onItemSelect: () => {},
+};
+
 const GroupFilterModal = ({ 
-  visible, 
-  onClose, 
-  teachers,
-  selectedTeachers,
-  onTeacherSelect,
-  levels,
-  selectedLevels,
-  onLevelSelect,
-  groups,
-  selectedGroups,
-  onGroupSelect,
-  onReset,
-  onApply
+  visible = false, 
+  onClose = () => {},
+  onReset = () => {},
+  onApply = () => {},
+  filters = {
+    teachers: { ...defaultCategoryProps },
+    levels: { ...defaultCategoryProps },
+    groups: { ...defaultCategoryProps },
+    danceTypes: { ...defaultCategoryProps },
+    subscriptionTypes: { ...defaultCategoryProps },
+  }
 }) => {
   const [activeTab, setActiveTab] = useState('teachers');
 
+  const hasTeachers = filters.teachers?.items?.length > 0;
+  const hasLevels = filters.levels?.items?.length > 0;
+  const hasGroups = filters.groups?.items?.length > 0;
+  const hasDanceTypes = filters.danceTypes?.items?.length > 0;
+  const hasSubscriptionTypes = filters.subscriptionTypes?.items?.length > 0;
+
+  useEffect(() => {
+    if (hasTeachers) setActiveTab('teachers');
+    else if (hasLevels) setActiveTab('levels');
+    else if (hasGroups) setActiveTab('groups');
+    else if (hasDanceTypes) setActiveTab('danceTypes');
+    else if (hasSubscriptionTypes) setActiveTab('subscriptions');
+  }, []);
+
   const renderTeachersList = () => (
     <ScrollView style={styles.contentContainer}>
-      {teachers.map(teacher => (
+      {filters.teachers.items.map(teacher => (
         <TouchableOpacity
           key={teacher.id}
           style={styles.itemContainer}
-          onPress={() => onTeacherSelect(teacher.id)}
+          onPress={() => filters.teachers.onItemSelect(teacher.id)}
         >
           <Text style={styles.itemText}>
             {teacher.firstName} {teacher.lastName}
           </Text>
           <View style={[
             styles.checkbox,
-            selectedTeachers.includes(teacher.id) && styles.checkboxSelected
+            filters.teachers.selectedItems.includes(teacher.id) && styles.checkboxSelected
           ]}>
-            {selectedTeachers.includes(teacher.id) && (
+            {filters.teachers.selectedItems.includes(teacher.id) && (
               <Ionicons name="checkmark" size={16} color="white" />
             )}
           </View>
@@ -56,18 +74,18 @@ const GroupFilterModal = ({
 
   const renderLevelsList = () => (
     <ScrollView style={styles.contentContainer}>
-      {levels.map(level => (
+      {filters.levels.items.map(level => (
         <TouchableOpacity
           key={level}
           style={styles.itemContainer}
-          onPress={() => onLevelSelect(level)}
+          onPress={() => filters.levels.onItemSelect(level)}
         >
           <Text style={styles.itemText}>{level}</Text>
           <View style={[
             styles.checkbox,
-            selectedLevels.includes(level) && styles.checkboxSelected
+            filters.levels.selectedItems.includes(level) && styles.checkboxSelected
           ]}>
-            {selectedLevels.includes(level) && (
+            {filters.levels.selectedItems.includes(level) && (
               <Ionicons name="checkmark" size={16} color="white" />
             )}
           </View>
@@ -78,18 +96,62 @@ const GroupFilterModal = ({
 
   const renderGroupsList = () => (
     <ScrollView style={styles.contentContainer}>
-      {groups.map(group => (
+      {filters.groups.items.map(group => (
         <TouchableOpacity
           key={group.id}
           style={styles.itemContainer}
-          onPress={() => onGroupSelect(group.id)}
+          onPress={() => filters.groups.onItemSelect(group.id)}
         >
           <Text style={styles.itemText}>{group.name}</Text>
           <View style={[
             styles.checkbox,
-            selectedGroups.includes(group.id) && styles.checkboxSelected
+            filters.groups.selectedItems.includes(group.id) && styles.checkboxSelected
           ]}>
-            {selectedGroups.includes(group.id) && (
+            {filters.groups.selectedItems.includes(group.id) && (
+              <Ionicons name="checkmark" size={16} color="white" />
+            )}
+          </View>
+        </TouchableOpacity>
+      ))}
+    </ScrollView>
+  );
+
+  const renderDanceTypesList = () => (
+    <ScrollView style={styles.contentContainer}>
+      {filters.danceTypes.items.map(danceType => (
+        <TouchableOpacity
+          key={danceType.id}
+          style={styles.itemContainer}
+          onPress={() => filters.danceTypes.onItemSelect(danceType.id)}
+        >
+          <Text style={styles.itemText}>{danceType.name}</Text>
+          <View style={[
+            styles.checkbox,
+            filters.danceTypes.selectedItems.includes(danceType.id) && styles.checkboxSelected
+          ]}>
+            {filters.danceTypes.selectedItems.includes(danceType.id) && (
+              <Ionicons name="checkmark" size={16} color="white" />
+            )}
+          </View>
+        </TouchableOpacity>
+      ))}
+    </ScrollView>
+  );
+
+  const renderSubscriptionTypesList = () => (
+    <ScrollView style={styles.contentContainer}>
+      {filters.subscriptionTypes.items.map(subType => (
+        <TouchableOpacity
+          key={subType.id}
+          style={styles.itemContainer}
+          onPress={() => filters.subscriptionTypes.onItemSelect(subType.id)}
+        >
+          <Text style={styles.itemText}>{subType.name}</Text>
+          <View style={[
+            styles.checkbox,
+            filters.subscriptionTypes.selectedItems.includes(subType.id) && styles.checkboxSelected
+          ]}>
+            {filters.subscriptionTypes.selectedItems.includes(subType.id) && (
               <Ionicons name="checkmark" size={16} color="white" />
             )}
           </View>
@@ -101,20 +163,26 @@ const GroupFilterModal = ({
   const getActiveContent = () => {
     switch (activeTab) {
       case 'teachers':
-        return renderTeachersList();
+        return hasTeachers ? renderTeachersList() : null;
       case 'levels':
-        return renderLevelsList();
+        return hasLevels ? renderLevelsList() : null;
       case 'groups':
-        return renderGroupsList();
+        return hasGroups ? renderGroupsList() : null;
+      case 'danceTypes':
+        return hasDanceTypes ? renderDanceTypesList() : null;
+      case 'subscriptions':
+        return hasSubscriptionTypes ? renderSubscriptionTypesList() : null;
       default:
         return null;
     }
   };
 
   const hasAnyFilters = 
-    selectedTeachers.length > 0 || 
-    selectedLevels.length > 0 || 
-    selectedGroups.length > 0;
+    (filters.teachers?.selectedItems?.length > 0) || 
+    (filters.levels?.selectedItems?.length > 0) || 
+    (filters.groups?.selectedItems?.length > 0) ||
+    (filters.danceTypes?.selectedItems?.length > 0) ||
+    (filters.subscriptionTypes?.selectedItems?.length > 0);
 
   return (
     <Modal
@@ -128,47 +196,72 @@ const GroupFilterModal = ({
           <TouchableWithoutFeedback onPress={() => {}}>
             <View style={styles.modalContent}>
               <View style={styles.header}>
-              <Text style={styles.title}>Фильтры</Text>
-              <TouchableOpacity onPress={onClose} style={styles.closeButton}>
+                <Text style={styles.title}>Фильтры</Text>
+                <TouchableOpacity onPress={onClose} style={styles.closeButton}>
                   <Ionicons name="close" size={24} color="black" />
-              </TouchableOpacity>
+                </TouchableOpacity>
               </View>
 
               <View style={styles.tabsContainer}>
-              <FilterTab 
-                  title="Преподаватели" 
-                  isActive={activeTab === 'teachers'} 
-                  onPress={() => setActiveTab('teachers')}
-              />
-              <FilterTab 
-                  title="Уровни" 
-                  isActive={activeTab === 'levels'} 
-                  onPress={() => setActiveTab('levels')}
-              />
-              <FilterTab 
-                  title="Группы" 
-                  isActive={activeTab === 'groups'} 
-                  onPress={() => setActiveTab('groups')}
-              />
+                {hasTeachers && (
+                  <FilterTab 
+                    title="Преподаватели" 
+                    isActive={activeTab === 'teachers'} 
+                    onPress={() => setActiveTab('teachers')}
+                  />
+                )}
+                {hasLevels && (
+                  <FilterTab 
+                    title="Уровни" 
+                    isActive={activeTab === 'levels'} 
+                    onPress={() => setActiveTab('levels')}
+                  />
+                )}
+                {hasGroups && (
+                  <FilterTab 
+                    title="Группы" 
+                    isActive={activeTab === 'groups'} 
+                    onPress={() => setActiveTab('groups')}
+                  />
+                )}
               </View>
+              
+              {(hasDanceTypes || hasSubscriptionTypes) && (
+                <View style={styles.tabsContainer}>
+                  {hasDanceTypes && (
+                    <FilterTab 
+                      title="Виды танца" 
+                      isActive={activeTab === 'danceTypes'} 
+                      onPress={() => setActiveTab('danceTypes')}
+                    />
+                  )}
+                  {hasSubscriptionTypes && (
+                    <FilterTab 
+                      title="Абонементы" 
+                      isActive={activeTab === 'subscriptions'} 
+                      onPress={() => setActiveTab('subscriptions')}
+                    />
+                  )}
+                </View>
+              )}
 
               {getActiveContent()}
 
               <View style={styles.footer}>
-              {hasAnyFilters && (
+                {hasAnyFilters && (
                   <TouchableOpacity 
-                  style={styles.resetButton} 
-                  onPress={onReset}
+                    style={styles.resetButton} 
+                    onPress={onReset}
                   >
-                  <Text style={styles.resetButtonText}>Сбросить</Text>
+                    <Text style={styles.resetButtonText}>Сбросить</Text>
                   </TouchableOpacity>
-              )}
-              <TouchableOpacity 
+                )}
+                <TouchableOpacity 
                   style={styles.applyButton} 
                   onPress={onApply}
-              >
+                >
                   <Text style={styles.applyButtonText}>Применить</Text>
-              </TouchableOpacity>
+                </TouchableOpacity>
               </View>
             </View>
           </TouchableWithoutFeedback>
@@ -207,7 +300,8 @@ const styles = StyleSheet.create({
   },
   tabsContainer: {
     flexDirection: 'row',
-    marginBottom: 20,
+    marginBottom: 10,
+    paddingBottom: 10,
     borderBottomWidth: 1,
     borderBottomColor: '#e0e0e0',
   },

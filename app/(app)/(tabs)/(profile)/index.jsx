@@ -14,6 +14,7 @@ const user = users[0];
 const Profile = () => {
   const router = useRouter();
   const { session, signIn } = useSession();
+  const [sessionRole, setSessionRole] = useState(session);
   const [description, setDescription] = useState(user.description);
   const [isSaved, setIsSaved] = useState(false);
   const [activeSubscriptions, setActiveSubscriptions] = useState([]);
@@ -30,6 +31,10 @@ const Profile = () => {
       setActiveSubscriptions(userSubscriptions);
     }
   }, []);
+
+  useEffect(() => {
+    setSessionRole(session);
+  }, [session]);
 
   const handleSave = () => {
     console.log('Description saved:', description);
@@ -67,9 +72,9 @@ const Profile = () => {
         <View style={{alignItems: "center"}}>
           <View style={styles.profileImageContainer}>
             <Image
-            style={styles.profileImage}
-            source={user.photo}
-            placeholder={require("../../../../assets/images/placeholder-image.png")}
+              style={styles.profileImage}
+              source={user.photo}
+              placeholder={require("../../../../assets/images/placeholder-image.png")}
             />
             <TouchableOpacity 
               style={styles.editButton}
@@ -77,7 +82,7 @@ const Profile = () => {
             >
               <Ionicons name="pencil" size={18} color="white" />
             </TouchableOpacity>
-            <TouchableOpacity 
+            <TouchableOpacity
               style={styles.switchRoleButton}
               onPress={handleSwitchRole}
             >
@@ -88,7 +93,7 @@ const Profile = () => {
             <Text style={styles.userNameText}>{user.lastName} {user.firstName} {user.middleName}</Text>
           </View>
           <Text style={styles.userRoleText}>
-            {user.role === 'Student' ? 'Студент' : 'Преподаватель'}, {user.level} уровень
+            {sessionRole === 'Student' ? 'Ученик, ' + user.level + ' уровень' : 'Преподаватель'}
           </Text>
         </View>
 
@@ -103,7 +108,7 @@ const Profile = () => {
             <Text style={styles.contactDataText}>{user.phoneNumber}</Text>
           </View>
 
-          {user.role === 'Student' && (
+          {sessionRole === 'Student' && (
             <View style={styles.subscriptionsSection}>
               <View style={styles.sectionHeader}>
                 <Text style={styles.sectionTitle}>Мои абонементы</Text>
@@ -234,7 +239,7 @@ const styles = StyleSheet.create({
   },
   descriptionField: {
     height: 200,
-    textAlignVertical: 'top', // Для многострочного ввода
+    textAlignVertical: 'top',
     fontSize: 16,
     fontFamily: "os-regular",
 

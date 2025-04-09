@@ -11,43 +11,43 @@ import users from '../../../../scratch-data/users.json';
 const slotsData = [
   {
     id: 1,
-    startTime: '2025-03-10T10:00:00.000Z',
-    endTime: '2025-03-10T11:00:00.000Z',
+    startTime: '2025-03-21T10:00:00.000Z',
+    endTime: '2025-03-21T11:00:00.000Z',
     danceType: 'Хип-хоп',
     teacherName: 'Сергей Иванов',
-    teacherImage: { uri: 'https://randomuser.me/api/portraits/men/11.jpg' },
+    teacherImage: { uri: 'https://randomuser.me/api/portraits/men/12.jpg' },
   },
   {
     id: 2,
-    startTime: '2025-03-11T12:00:00.000Z',
-    endTime: '2025-03-11T13:00:00.000Z',
+    startTime: '2025-03-22T12:00:00.000Z',
+    endTime: '2025-03-22T13:00:00.000Z',
     danceType: 'Бальные танцы',
     teacherName: 'Екатерина Власова',
     teacherImage: { uri: 'https://randomuser.me/api/portraits/women/12.jpg' },
   },
   {
     id: 3,
-    startTime: '2025-03-12T14:00:00.000Z',
-    endTime: '2025-03-12T15:00:00.000Z',
+    startTime: '2025-03-20T14:00:00.000Z',
+    endTime: '2025-03-20T15:00:00.000Z',
     danceType: 'Контемпорари',
     teacherName: 'Андрей Павлов',
-    teacherImage: { uri: 'https://randomuser.me/api/portraits/men/13.jpg' },
+    teacherImage: { uri: 'https://randomuser.me/api/portraits/men/15.jpg' },
   },
   {
     id: 4,
-    startTime: '2025-03-13T16:00:00.000Z',
-    endTime: '2025-03-13T17:00:00.000Z',
+    startTime: '2025-03-21T16:00:00.000Z',
+    endTime: '2025-03-21T17:00:00.000Z',
     danceType: 'Контемпорари',
     teacherName: 'Андрей Павлов',
-    teacherImage: { uri: 'https://randomuser.me/api/portraits/men/13.jpg' },
+    teacherImage: { uri: 'https://randomuser.me/api/portraits/men/15.jpg' },
   },
   {
     id: 5,
-    startTime: '2025-03-14T18:00:00.000Z',
-    endTime: '2025-03-14T19:00:00.000Z',
+    startTime: '2025-03-22T18:00:00.000Z',
+    endTime: '2025-03-22T19:00:00.000Z',
     danceType: 'Контемпорари',
     teacherName: 'Андрей Павлов',
-    teacherImage: { uri: 'https://randomuser.me/api/portraits/men/13.jpg' },
+    teacherImage: { uri: 'https://randomuser.me/api/portraits/men/15.jpg' },
   },
 ];
 
@@ -153,6 +153,10 @@ export default function ScheduleSlots() {
         visible={modalVisible}
         onClose={() => setModalVisible(false)}
         onConfirm={handleConfirmSlot}
+        title="Подать заявку"
+        message="Вы уверены, что хотите подать заявку на данный слот?"
+        confirmText="Да"
+        cancelText="Нет"
       />
 
       <TeacherFilterModal
