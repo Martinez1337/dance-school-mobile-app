@@ -85,6 +85,7 @@ export const globalStyles = StyleSheet.create({
     flex: 1,
     marginLeft: 10,
     marginTop: 10,
+    marginRight: 5,
     marginBottom: 5,
     padding: 10,
     flexDirection: "row",

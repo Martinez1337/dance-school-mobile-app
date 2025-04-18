@@ -89,7 +89,7 @@ const LessonRequestScreen = () => {
           <View style={styles.infoRow}>
             <Ionicons name="calendar-outline" size={24} color="#666" />
             <Text style={styles.infoText}>
-              {format(parseISO(mockRequest.startTime), 'd MMMM, HH:mm', { locale: ru })} - 
+              {format(parseISO(mockRequest.startTime), 'd MMMM, HH:mm', { locale: ru })} -
               {format(parseISO(mockRequest.finishTime), ' HH:mm', { locale: ru })}
             </Text>
           </View>
@@ -97,7 +97,7 @@ const LessonRequestScreen = () => {
 
         <Text style={styles.sectionTitle}>Доступный зал</Text>
         <View style={styles.section}>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.selectInput}
             onPress={() => setIsHallModalVisible(true)}
           >
@@ -145,8 +145,8 @@ const LessonRequestScreen = () => {
         onClose={() => setConfirmationVisible(false)}
         onConfirm={handleConfirm}
         title={actionType === 'accept' ? 'Принять заявку?' : 'Отклонить заявку?'}
-        message={actionType === 'accept' 
-          ? 'Вы уверены, что хотите принять эту заявку?' 
+        message={actionType === 'accept'
+          ? 'Вы уверены, что хотите принять эту заявку?'
           : 'Вы уверены, что хотите отклонить эту заявку?'
         }
         confirmText={actionType === 'accept' ? 'Принять' : 'Отклонить'}
@@ -246,6 +246,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 24,
+    marginLeft: 10,
   },
   checkbox: {
     width: 24,

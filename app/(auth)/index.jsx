@@ -6,16 +6,28 @@ import {authorizationValidationSchema} from "../../validation/validation";
 import {FormField} from "../../components";
 import {globalStyles} from "../../styles/globalStyles";
 import {useSession} from "../../context/ctx";
+import { login } from '../../util/apiService';
 
 const isFormValid = (isValid, touched) => {
   return isValid && Object.keys(touched).length !== 0;
 }
 
-const onSignInHandler = (values) => {}
+async function onSignInHandler(values) {
+  // console.log(`onSignInHandler: ${JSON.stringify(values)}`);
+  // const requestBody = {
+  //   grant_type: null,
+  //   username: values.email,
+  //   password: values.password,
+  //   scope: null,
+  //   client_id: null,
+  //   client_secret: null,
+  // }
+  // const response = await login(requestBody);
+  // console.log(`response: ${JSON.stringify(response)}`);
+}
 
 const Index = () => {
   const { signIn } = useSession();
-
   return (
     <SafeAreaView style={globalStyles.mainSafeArea}>
       <KeyboardAwareScrollView

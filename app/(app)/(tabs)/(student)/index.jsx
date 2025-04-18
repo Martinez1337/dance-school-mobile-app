@@ -1,10 +1,11 @@
-import {View, Text, StyleSheet,TouchableOpacity, Modal, SafeAreaView} from 'react-native';
+import {View, Text, StyleSheet, TouchableOpacity, Modal, SafeAreaView, TextInput} from 'react-native';
 import { useSession } from '../../../../context/ctx';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import {FlashList} from "@shopify/flash-list";
 import DanceListItem from '../../../../components/DanceListItem';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { globalStyles } from '../../../../styles/globalStyles';
 
 const danceTypes = [
   { id: '1', name: 'Аргентинское танго', image: { uri: 'https://images.unsplash.com/photo-1545959570-a94084071b5d' }, description: 'Классический стиль аргентинского танго' },
@@ -19,7 +20,19 @@ export default function StudentDashboard() {
   const { session } = useSession();
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedDance, setSelectedDance] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');
   const router = useRouter();
+
+  // Фильтруем танцы по поисковому запросу
+  const filteredDanceTypes = useMemo(() => {
+    if (!searchQuery.trim()) return danceTypes;
+
+    const normalizedQuery = searchQuery.toLowerCase().trim();
+    return danceTypes.filter(dance =>
+      dance.name.toLowerCase().includes(normalizedQuery) ||
+      dance.description.toLowerCase().includes(normalizedQuery)
+    );
+  }, [searchQuery]);
 
   const renderItem = ({ item }) => (
     <DanceListItem item={item} onPress={() => {
@@ -28,15 +41,42 @@ export default function StudentDashboard() {
     }} />
   );
 
+  const handleClearSearch = () => {
+    setSearchQuery('');
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <Text style={styles.title}>Выберите стиль танца</Text>
+
+      {/* Поисковая строка в стиле экрана events */}
+      <View style={{flexDirection: "row", marginHorizontal: 10}}>
+        <View style={globalStyles.searchBar}>
+          <Ionicons name="search" size={24} color="black"/>
+          <TextInput
+            style={globalStyles.searchTextInput}
+            placeholder={"Поиск"}
+            placeholderTextColor={"#666666"}
+            value={searchQuery}
+            clearButtonMode={"always"}
+            autoCapitalize={"none"}
+            autoCorrect={false}
+            onChangeText={text => setSearchQuery(text)}
+          />
+        </View>
+      </View>
+
       <FlashList
-        data={danceTypes}
+        data={filteredDanceTypes}
         renderItem={renderItem}
         keyExtractor={item => item.id}
         estimatedItemSize={200}
         showsVerticalScrollIndicator={false}
+        ListEmptyComponent={() => (
+          <View style={styles.emptyContainer}>
+            <Text style={styles.emptyText}>Ничего не найдено</Text>
+          </View>
+        )}
       />
 
       <Modal
@@ -45,27 +85,27 @@ export default function StudentDashboard() {
         visible={modalVisible}
         onRequestClose={() => setModalVisible(false)}
       >
-        <TouchableOpacity 
+        <TouchableOpacity
           style={styles.modalOverlay}
           activeOpacity={1}
           onPress={() => setModalVisible(false)}
         >
-          <TouchableOpacity 
+          <TouchableOpacity
             activeOpacity={1}
             onPress={(e) => e.stopPropagation()}
             style={styles.modalContent}
           >
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Выберите тип занятия</Text>
-              <TouchableOpacity 
+              <TouchableOpacity
                 onPress={() => setModalVisible(false)}
                 style={styles.closeButton}
               >
                 <Ionicons name="close" size={24} color="#333" />
               </TouchableOpacity>
             </View>
-            
-            <TouchableOpacity 
+
+            <TouchableOpacity
               style={styles.option}
               onPress={() => {
                 setModalVisible(false);
@@ -81,7 +121,7 @@ export default function StudentDashboard() {
             <TouchableOpacity
               style={styles.option}
               onPress={() => {
-                setModalVisible(false); 
+                setModalVisible(false);
                 router.push('schedule-groups');
               }}
             >
@@ -105,6 +145,17 @@ const styles = StyleSheet.create({
     fontFamily: 'os-bold',
     paddingVertical: 5,
     marginLeft: 16,
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 50,
+  },
+  emptyText: {
+    fontSize: 16,
+    fontFamily: 'os-regular',
+    color: '#999',
   },
   modalOverlay: {
     flex: 1,

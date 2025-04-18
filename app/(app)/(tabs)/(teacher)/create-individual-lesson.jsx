@@ -21,9 +21,9 @@ const simpleStudents = users
 
 // Временные данные для демонстрации
 const danceStyles = [
-  'Бальные танцы', 
-  'Хип-хоп', 
-  'Современные танцы', 
+  'Бальные танцы',
+  'Хип-хоп',
+  'Современные танцы',
   'Контемпорари',
   'Латиноамериканские танцы'
 ];
@@ -37,17 +37,18 @@ const halls = [
 const CreateIndividualLessonScreen = () => {
   const [startDate, setStartDate] = useState(new Date());
   const [endDate, setEndDate] = useState(new Date(new Date().setHours(new Date().getHours() + 1)));
-  
+
   const [isStartDatePickerVisible, setStartDatePickerVisible] = useState(false);
   const [isStartTimePickerVisible, setStartTimePickerVisible] = useState(false);
   const [isEndDatePickerVisible, setEndDatePickerVisible] = useState(false);
   const [isEndTimePickerVisible, setEndTimePickerVisible] = useState(false);
-  
+
   const [selectedHall, setSelectedHall] = useState(halls[0].id);
+  const [allowNeighbors, setAllowNeighbors] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState(simpleStudents[0]?.id || '');
   const [selectedDanceStyle, setSelectedDanceStyle] = useState(danceStyles[0]);
   const [description, setDescription] = useState('');
-  
+
   const [confirmationVisible, setConfirmationVisible] = useState(false);
   const [isHallModalVisible, setIsHallModalVisible] = useState(false);
   const [isStudentModalVisible, setIsStudentModalVisible] = useState(false);
@@ -72,7 +73,7 @@ const CreateIndividualLessonScreen = () => {
     newStartDate.setHours(time.getHours(), time.getMinutes());
     setStartDate(newStartDate);
     setStartTimePickerVisible(false);
-    
+
     const newEndDate = new Date(newStartDate);
     newEndDate.setHours(newStartDate.getHours() + 1);
     setEndDate(newEndDate);
@@ -91,11 +92,11 @@ const CreateIndividualLessonScreen = () => {
     setEndDate(newEndDate);
     setEndTimePickerVisible(false);
   };
-  
+
   const handleCreateLesson = () => {
     setConfirmationVisible(true);
   };
-  
+
   const handleConfirm = () => {
     setConfirmationVisible(false);
     console.log({
@@ -135,50 +136,50 @@ const CreateIndividualLessonScreen = () => {
         }}
       />
 
-      <ScrollView 
-        style={styles.content} 
+      <ScrollView
+        style={styles.content}
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Время занятия</Text>
-          
+
           <View style={styles.dateTimeContainer}>
             <View style={styles.dateTimeColumn}>
               <Text style={styles.label}>Дата начала</Text>
-              <TouchableOpacity 
-                style={styles.input} 
+              <TouchableOpacity
+                style={styles.input}
                 onPress={() => setStartDatePickerVisible(true)}
               >
                 <Text style={styles.dateText}>{format(startDate, 'dd.MM.yyyy', { locale: ru })}</Text>
               </TouchableOpacity>
             </View>
-            
+
             <View style={styles.dateTimeColumn}>
               <Text style={styles.label}>Время начала</Text>
-              <TouchableOpacity 
-                style={styles.input} 
+              <TouchableOpacity
+                style={styles.input}
                 onPress={() => setStartTimePickerVisible(true)}
               >
                 <Text style={styles.dateText}>{format(startDate, 'HH:mm')}</Text>
               </TouchableOpacity>
             </View>
           </View>
-          
+
           <View style={styles.dateTimeContainer}>
             <View style={styles.dateTimeColumn}>
               <Text style={styles.label}>Дата окончания</Text>
-              <TouchableOpacity 
-                style={styles.input} 
+              <TouchableOpacity
+                style={styles.input}
                 onPress={() => setEndDatePickerVisible(true)}
               >
                 <Text style={styles.dateText}>{format(endDate, 'dd.MM.yyyy', { locale: ru })}</Text>
               </TouchableOpacity>
             </View>
-            
+
             <View style={styles.dateTimeColumn}>
               <Text style={styles.label}>Время окончания</Text>
-              <TouchableOpacity 
-                style={styles.input} 
+              <TouchableOpacity
+                style={styles.input}
                 onPress={() => setEndTimePickerVisible(true)}
               >
                 <Text style={styles.dateText}>{format(endDate, 'HH:mm')}</Text>
@@ -189,7 +190,7 @@ const CreateIndividualLessonScreen = () => {
 
         <View style={styles.section}>
           <Text style={styles.label}>Зал</Text>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.selectInput}
             onPress={() => setIsHallModalVisible(true)}
           >
@@ -198,9 +199,21 @@ const CreateIndividualLessonScreen = () => {
           </TouchableOpacity>
         </View>
 
+        <TouchableOpacity
+          style={styles.neighborsToggle}
+          onPress={() => setAllowNeighbors(!allowNeighbors)}
+        >
+          <View style={[styles.checkbox, allowNeighbors && styles.checkboxChecked]}>
+            {allowNeighbors && <Ionicons name="checkmark" size={16} color="#fff" />}
+          </View>
+          <Text style={styles.neighborsText}>
+            Согласен на присутствие других учеников в зале
+          </Text>
+        </TouchableOpacity>
+
         <View style={styles.section}>
           <Text style={styles.label}>Ученик</Text>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.selectInput}
             onPress={() => setIsStudentModalVisible(true)}
           >
@@ -211,7 +224,7 @@ const CreateIndividualLessonScreen = () => {
 
         <View style={styles.section}>
           <Text style={styles.label}>Вид танца</Text>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.selectInput}
             onPress={() => setIsDanceStyleModalVisible(true)}
           >
@@ -412,6 +425,30 @@ const styles = StyleSheet.create({
     fontFamily: 'os-regular',
     color: '#333',
   },
+  neighborsToggle: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 24,
+    marginLeft: 10,
+  },
+  checkbox: {
+    width: 24,
+    height: 24,
+    borderRadius: 6,
+    borderWidth: 2,
+    borderColor: '#d903e4',
+    marginRight: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  checkboxChecked: {
+    backgroundColor: '#d903e4',
+  },
+  neighborsText: {
+    fontSize: 14,
+    fontFamily: 'os-regular',
+    flex: 1,
+  }
 });
 
-export default CreateIndividualLessonScreen; 
+export default CreateIndividualLessonScreen;

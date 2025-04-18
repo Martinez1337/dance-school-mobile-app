@@ -1,10 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, Alert } from 'react-native';
 import { Stack, router } from 'expo-router';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { Formik } from 'formik';
+import { Ionicons } from '@expo/vector-icons';
+
 import { editUserInfoValidationSchema, editPasswordValidationSchema } from '../../../../validation/validation';
 import { FormField } from '../../../../components';
+import SelectionModal from '../../../../components/modals/SelectionModal';
+import { apiRequest } from '../../../../util/apiService';
 
 const user = {
   userId: "e1a5c879-9a1d-45c2-8f0d-d3442f2dcd1a",
@@ -21,6 +25,33 @@ const user = {
 
 const EditProfileScreen = () => {
   const [isEditingPassword, setIsEditingPassword] = useState(false);
+  const [isLevelModalVisible, setIsLevelModalVisible] = useState(false);
+  const [selectedLevel, setSelectedLevel] = useState('');
+  const [levels, setLevels] = useState([]);
+
+  useEffect(() => {
+    console.log('HERE')
+    const fetchLevels = async () => {
+      const response = await apiRequest({
+        method: 'GET',
+        url: '/levels',
+        requiresAuth: false,
+      }).catch(error => {
+        console.log(error);
+      });
+      console.log(`response: ${JSON.stringify(response)}`);
+      setLevels(response);
+      setSelectedLevel(response[0].id);
+      console.log(`selectedLevel: ${selectedLevel}`);
+    };
+    fetchLevels();
+  }, []);
+
+  const getSelectedLevelName = () => {
+    const level = levels?.find(l => l.id === selectedLevel);
+    if (!level) return 'Выберите уровень';
+    return level ? level.name : '';
+  }
 
   const handleSaveProfile = (values) => {
     Alert.alert(
@@ -70,7 +101,7 @@ const EditProfileScreen = () => {
         }}
       />
 
-      <KeyboardAwareScrollView 
+      <KeyboardAwareScrollView
         style={styles.content}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
@@ -89,14 +120,14 @@ const EditProfileScreen = () => {
             validationSchema={editUserInfoValidationSchema}
           >
             {({
-              handleChange,
-              handleBlur,
-              handleSubmit,
-              values,
-              errors,
-              touched,
-              isValid,
-            }) => (
+                handleChange,
+                handleBlur,
+                handleSubmit,
+                values,
+                errors,
+                touched,
+                isValid,
+              }) => (
               <View>
                 <FormField
                   field="lastName"
@@ -151,6 +182,28 @@ const EditProfileScreen = () => {
                   handleBlur={handleBlur}
                 />
 
+                <View style={styles.section}>
+                  <Text style={styles.label}>Уровень</Text>
+                  <TouchableOpacity
+                    style={styles.selectInput}
+                    onPress={() => setIsLevelModalVisible(true)}
+                  >
+                    <Text style={styles.selectText}>{getSelectedLevelName()}</Text>
+                    <Ionicons name="chevron-down" size={20} color="#666" />
+                  </TouchableOpacity>
+                </View>
+
+                <SelectionModal
+                  visible={isLevelModalVisible}
+                  onClose={() => setIsLevelModalVisible(false)}
+                  onSelect={setSelectedLevel}
+                  title="Выберите уровень"
+                  items={levels}
+                  selectedValue={selectedLevel}
+                  labelExtractor={(item) => item.name}
+                  valueExtractor={(item) => item.id}
+                />
+
                 <FormField
                   field="description"
                   label="Описание"
@@ -191,14 +244,14 @@ const EditProfileScreen = () => {
             validationSchema={editPasswordValidationSchema}
           >
             {({
-              handleChange,
-              handleBlur,
-              handleSubmit,
-              values,
-              errors,
-              touched,
-              isValid,
-            }) => (
+                handleChange,
+                handleBlur,
+                handleSubmit,
+                values,
+                errors,
+                touched,
+                isValid,
+              }) => (
               <View>
                 <FormField
                   field="newPassword"
@@ -298,6 +351,30 @@ const styles = StyleSheet.create({
   cancelButtonText: {
     color: '#666',
   },
-}); 
+  section: {
+    marginBottom: 24,
+  },
+  label: {
+    fontSize: 16,
+    fontFamily: 'os-regular',
+    marginBottom: 8,
+    color: '#333',
+  },
+  selectInput: {
+    height: 48,
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 8,
+    paddingHorizontal: 16,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  selectText: {
+    fontSize: 16,
+    fontFamily: 'os-regular',
+    color: '#333',
+  }
+});
 
 export default EditProfileScreen;

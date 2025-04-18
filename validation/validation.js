@@ -11,9 +11,10 @@ export const registrationValidationSchema = Yup.object().shape({
     .required("Пожалуйста, введите email"),
   phoneNumber: Yup.string().matches(phoneRegExp, 'Номер телефона некорректен')
     .required("Пожалуйста, введите номер телефона"),
+  description: Yup.string().max(500, 'Описание не должно превышать 500 символов'),
   password: Yup.string()
     .required("Пожалуйста, введите пароль")
-    .min(6, "Пароль должен содержать минимум 6 символов"),
+    .min(8, "Пароль должен содержать минимум 8 символов"),
   confirmPassword: Yup.string()
     .required("Пожалуйста, подтвердите пароль")
     .oneOf([Yup.ref("password")], "Пароли не совпадают"),

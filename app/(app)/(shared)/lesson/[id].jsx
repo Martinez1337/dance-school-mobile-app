@@ -1,21 +1,27 @@
 import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity } from 'react-native';
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import { useEffect, useState } from 'react';
+import { FlashList } from '@shopify/flash-list';
 import { Ionicons } from '@expo/vector-icons';
 import { format, parseISO } from 'date-fns';
 import { ru } from 'date-fns/locale';
+
 import lessons from '../../../../scratch-data/lessons.json';
 import users from '../../../../scratch-data/users.json';
 import groups from '../../../../scratch-data/groups.json';
 import classrooms from '../../../../scratch-data/classrooms.json';
 import subscriptions from '../../../../scratch-data/subscriptions.json';
 import {useSession} from "../../../../context/ctx";
+import TeacherCard from '../../../../components/TeacherCard';
+import TeacherProfileModal from '../../../../components/modals/TeacherProfileModal';
 
 export default function LessonScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams();
   const [lessonData, setLessonData] = useState(null);
+  const [teacherProfileVisible, setTeacherProfileVisible] = useState(false);
   const [hasValidSubscription, setHasValidSubscription] = useState(false);
+
   const { session } = useSession();
 
   const currentUserId = 'e1a5c879-9a1d-45c2-8f0d-d3442f2dcd1a';
@@ -29,7 +35,7 @@ export default function LessonScreen() {
 
     const group = lesson.groupId ? groups.find(g => g.id === lesson.groupId) : null;
     const classroom = classrooms.find(c => c.id === lesson.classroomId);
-    const teachers = Array.isArray(lesson.teacherId) 
+    const teachers = Array.isArray(lesson.teacherId)
       ? lesson.teacherId.map(tid => users.find(u => u.id === tid)).filter(Boolean)
       : [users.find(u => u.id === lesson.teacherId)].filter(Boolean);
 
@@ -57,8 +63,8 @@ export default function LessonScreen() {
     return null;
   }
 
-  const showJoinButton = 
-    lessonData.group && 
+  const showJoinButton =
+    lessonData.group &&
     lessonData.currentStudents < lessonData.maxStudents &&
     session === "Student";
 
@@ -95,7 +101,7 @@ export default function LessonScreen() {
         </View>
 
         <View style={styles.infoRow}>
-          <Text style={styles.label}>Вид танца:</Text>
+          <Text style={styles.label}>Стиль танца:</Text>
           <Text style={styles.value}>{lessonData.danceType}</Text>
         </View>
 
@@ -138,38 +144,34 @@ export default function LessonScreen() {
 
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Преподаватели</Text>
-        {lessonData.teachers.map(teacher => (
-          <View key={teacher.id} style={styles.teacherCard}>
-            <Image
-              source={{ uri: teacher.photo }}
-              style={styles.teacherPhoto}
-            />
-            <View style={styles.teacherInfo}>
-              <Text style={styles.teacherName}>
-                {teacher.firstName} {teacher.lastName}
-              </Text>
-              {teacher.description && (
-                <Text style={styles.teacherDescription}>
-                  {teacher.description}
-                </Text>
-              )}
-            </View>
-          </View>
-        ))}
+        <FlashList
+          data={lessonData.teachers}
+          renderItem={({ item }) => (
+            <TeacherCard teacher={item} onPress={setTeacherProfileVisible}/>
+          )}
+          estimatedItemSize={100}
+          keyExtractor={(item) => item.id.toString()}
+          scrollEnabled={false}
+        />
+        <TeacherProfileModal
+          visible={teacherProfileVisible}
+          onClose={() => setTeacherProfileVisible(false)}
+          teacher={teacher}
+        />
       </View>
 
       {showJoinButton && (
         <View style={styles.buttonContainer}>
           {hasValidSubscription ? (
-            <TouchableOpacity 
-              style={styles.button} 
+            <TouchableOpacity
+              style={styles.button}
               onPress={handleJoinGroup}
             >
               <Text style={styles.buttonText}>Вступить в группу</Text>
             </TouchableOpacity>
           ) : (
-            <TouchableOpacity 
-              style={styles.button} 
+            <TouchableOpacity
+              style={styles.button}
               onPress={handleGoToSubscriptions}
             >
               <Text style={styles.buttonText}>Приобрести абонемент</Text>
@@ -224,34 +226,6 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginBottom: 16,
     fontFamily: 'os-bold',
-  },
-  teacherCard: {
-    flexDirection: 'row',
-    marginBottom: 16,
-    backgroundColor: '#f8f8f8',
-    borderRadius: 12,
-    padding: 12,
-  },
-  teacherPhoto: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    marginRight: 16,
-  },
-  teacherInfo: {
-    flex: 1,
-    justifyContent: 'center',
-  },
-  teacherName: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 4,
-    fontFamily: 'os-bold',
-  },
-  teacherDescription: {
-    fontSize: 14,
-    color: '#666',
-    fontFamily: 'os-regular',
   },
   buttonContainer: {
     padding: 16,
