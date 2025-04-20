@@ -1,12 +1,12 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity, TextInput } from 'react-native';
-import { Stack, router } from 'expo-router';
+import React, {useState, useEffect} from 'react';
+import {View, Text, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity, TextInput} from 'react-native';
+import {Stack, router} from 'expo-router';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
-import { format } from 'date-fns';
-import { ru } from 'date-fns/locale';
-import { Ionicons } from '@expo/vector-icons';
+import {format} from 'date-fns';
+import {ru} from 'date-fns/locale';
+import {Ionicons} from '@expo/vector-icons';
 
-import { ConfirmationModal, SelectionModal } from '../../../../components';
+import {ConfirmationModal, SelectionModal} from '../../../../components';
 import users from '../../../../scratch-data/users.json';
 
 // Упрощенный массив студентов для тестирования
@@ -29,9 +29,9 @@ const danceStyles = [
 ];
 
 const halls = [
-  { id: '1', name: 'Зал 1' },
-  { id: '2', name: 'Зал 2' },
-  { id: '3', name: 'Зал 3' },
+  {id: '1', name: 'Зал 1'},
+  {id: '2', name: 'Зал 2'},
+  {id: '3', name: 'Зал 3'},
 ];
 
 const CreateIndividualLessonScreen = () => {
@@ -130,7 +130,7 @@ const CreateIndividualLessonScreen = () => {
           headerTitle: 'Создание индивидуального занятия',
           headerLeft: () => (
             <TouchableOpacity onPress={() => router.back()}>
-              <Ionicons name="arrow-back" size={24} color="black" />
+              <Ionicons name="arrow-back" size={24} color="black"/>
             </TouchableOpacity>
           ),
         }}
@@ -150,7 +150,7 @@ const CreateIndividualLessonScreen = () => {
                 style={styles.input}
                 onPress={() => setStartDatePickerVisible(true)}
               >
-                <Text style={styles.dateText}>{format(startDate, 'dd.MM.yyyy', { locale: ru })}</Text>
+                <Text style={styles.dateText}>{format(startDate, 'dd.MM.yyyy', {locale: ru})}</Text>
               </TouchableOpacity>
             </View>
 
@@ -172,7 +172,7 @@ const CreateIndividualLessonScreen = () => {
                 style={styles.input}
                 onPress={() => setEndDatePickerVisible(true)}
               >
-                <Text style={styles.dateText}>{format(endDate, 'dd.MM.yyyy', { locale: ru })}</Text>
+                <Text style={styles.dateText}>{format(endDate, 'dd.MM.yyyy', {locale: ru})}</Text>
               </TouchableOpacity>
             </View>
 
@@ -195,7 +195,7 @@ const CreateIndividualLessonScreen = () => {
             onPress={() => setIsHallModalVisible(true)}
           >
             <Text style={styles.selectText}>{getSelectedHallName()}</Text>
-            <Ionicons name="chevron-down" size={20} color="#666" />
+            <Ionicons name="chevron-down" size={20} color="#666"/>
           </TouchableOpacity>
         </View>
 
@@ -204,7 +204,7 @@ const CreateIndividualLessonScreen = () => {
           onPress={() => setAllowNeighbors(!allowNeighbors)}
         >
           <View style={[styles.checkbox, allowNeighbors && styles.checkboxChecked]}>
-            {allowNeighbors && <Ionicons name="checkmark" size={16} color="#fff" />}
+            {allowNeighbors && <Ionicons name="checkmark" size={16} color="#fff"/>}
           </View>
           <Text style={styles.neighborsText}>
             Согласен на присутствие других учеников в зале
@@ -218,7 +218,7 @@ const CreateIndividualLessonScreen = () => {
             onPress={() => setIsStudentModalVisible(true)}
           >
             <Text style={styles.selectText}>{getSelectedStudentName()}</Text>
-            <Ionicons name="chevron-down" size={20} color="#666" />
+            <Ionicons name="chevron-down" size={20} color="#666"/>
           </TouchableOpacity>
         </View>
 
@@ -229,7 +229,7 @@ const CreateIndividualLessonScreen = () => {
             onPress={() => setIsDanceStyleModalVisible(true)}
           >
             <Text style={styles.selectText}>{selectedDanceStyle}</Text>
-            <Ionicons name="chevron-down" size={20} color="#666" />
+            <Ionicons name="chevron-down" size={20} color="#666"/>
           </TouchableOpacity>
         </View>
 

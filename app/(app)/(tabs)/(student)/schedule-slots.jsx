@@ -1,11 +1,19 @@
-import { SafeAreaView, Text, StyleSheet, View, TouchableOpacity } from 'react-native';
-import { useEffect, useState } from 'react';
-import { format, isAfter, parseISO } from 'date-fns';
-import { ru } from 'date-fns/locale';
-import { CustomCalendar, SlotCard, TeacherFilterModal, ConfirmationModal, TeacherProfileModal } from '../../../../components';
-import { FlashList } from '@shopify/flash-list';
-import { Stack } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import {SafeAreaView, Text, StyleSheet, View, TouchableOpacity} from 'react-native';
+import {useEffect, useState} from 'react';
+import {format, isAfter, parseISO} from 'date-fns';
+import {ru} from 'date-fns/locale';
+import {FlashList} from '@shopify/flash-list';
+import {Stack} from 'expo-router';
+import {Ionicons} from '@expo/vector-icons';
+
+import {
+  CustomCalendar,
+  SlotCard,
+  TeacherFilterModal,
+  ConfirmationModal,
+  TeacherProfileModal,
+  SlotInfoModal
+} from '../../../../components';
 import users from '../../../../scratch-data/users.json';
 
 const slotsData = [
@@ -15,7 +23,7 @@ const slotsData = [
     endTime: '2025-03-21T11:00:00.000Z',
     danceType: 'Хип-хоп',
     teacherName: 'Сергей Иванов',
-    teacherImage: { uri: 'https://randomuser.me/api/portraits/men/12.jpg' },
+    teacherImage: {uri: 'https://randomuser.me/api/portraits/men/12.jpg'},
   },
   {
     id: 2,
@@ -23,7 +31,7 @@ const slotsData = [
     endTime: '2025-03-22T13:00:00.000Z',
     danceType: 'Бальные танцы',
     teacherName: 'Екатерина Власова',
-    teacherImage: { uri: 'https://randomuser.me/api/portraits/women/12.jpg' },
+    teacherImage: {uri: 'https://randomuser.me/api/portraits/women/12.jpg'},
   },
   {
     id: 3,
@@ -31,7 +39,7 @@ const slotsData = [
     endTime: '2025-03-20T15:00:00.000Z',
     danceType: 'Контемпорари',
     teacherName: 'Андрей Павлов',
-    teacherImage: { uri: 'https://randomuser.me/api/portraits/men/15.jpg' },
+    teacherImage: {uri: 'https://randomuser.me/api/portraits/men/15.jpg'},
   },
   {
     id: 4,
@@ -39,7 +47,7 @@ const slotsData = [
     endTime: '2025-03-21T17:00:00.000Z',
     danceType: 'Контемпорари',
     teacherName: 'Андрей Павлов',
-    teacherImage: { uri: 'https://randomuser.me/api/portraits/men/15.jpg' },
+    teacherImage: {uri: 'https://randomuser.me/api/portraits/men/15.jpg'},
   },
   {
     id: 5,
@@ -47,7 +55,7 @@ const slotsData = [
     endTime: '2025-03-22T19:00:00.000Z',
     danceType: 'Контемпорари',
     teacherName: 'Андрей Павлов',
-    teacherImage: { uri: 'https://randomuser.me/api/portraits/men/15.jpg' },
+    teacherImage: {uri: 'https://randomuser.me/api/portraits/men/15.jpg'},
   },
 ];
 
@@ -62,13 +70,15 @@ export default function ScheduleSlots() {
   const [selectedTeachers, setSelectedTeachers] = useState([]);
   const [teacherProfileVisible, setTeacherProfileVisible] = useState(false);
   const [selectedTeacherData, setSelectedTeacherData] = useState(null);
+  const [slotInfoModalVisible, setSlotInfoModalVisible] = useState(false);
+  const [activeSlot, setActiveSlot] = useState(null);
 
   useEffect(() => {
     const marks = {};
     slotsData.forEach(slot => {
-      const date = format(parseISO(slot.startTime), 'yyyy-MM-dd', { locale: ru });
+      const date = format(parseISO(slot.startTime), 'yyyy-MM-dd', {locale: ru});
       if (isAfter(parseISO(slot.startTime), new Date())) {
-        marks[date] = { marked: true, dotColor: '#d903e4' };
+        marks[date] = {marked: true, dotColor: '#d903e4'};
       }
     });
     setMarkedDates(marks);
@@ -85,17 +95,31 @@ export default function ScheduleSlots() {
     );
   };
 
-  const handleTeacherPress = (teacherId) => {
-    const teacher = users.find(u => u.id === teacherId);
-    if (!teacher) return;
-    setSelectedTeacherData(teacher);
-    setTeacherProfileVisible(true);
-    setFilterModalVisible(false);
-  };
-
   const handleConfirmSlot = () => {
     setModalVisible(false);
     // Логика подачи заявки
+  };
+
+  const handleSlotPress = (slot) => {
+    setActiveSlot(slot);
+    setSlotInfoModalVisible(true);
+  };
+
+  const handleSelectSlot = (slot) => {
+    setSelectedSlot(slot);
+    setSlotInfoModalVisible(false);
+  };
+
+  const handleTeacherPress = (teacherName) => {
+    // Находим данные преподавателя по имени
+    const [firstName, lastName] = teacherName.split(' ');
+    const teacher = teachers.find(t => t.firstName === firstName && t.lastName === lastName);
+
+    if (teacher) {
+      setSelectedTeacherData(teacher);
+      setSlotInfoModalVisible(false);
+      setTeacherProfileVisible(true);
+    }
   };
 
   return (
@@ -103,14 +127,14 @@ export default function ScheduleSlots() {
       <Stack.Screen
         options={{
           headerRight: () => (
-            <TouchableOpacity 
-              onPress={() => setFilterModalVisible(true)} 
+            <TouchableOpacity
+              onPress={() => setFilterModalVisible(true)}
               style={styles.headerButton}
             >
-              <Ionicons 
-                name={selectedTeachers.length > 0 ? "filter" : "filter-outline"} 
-                size={24} 
-                color={selectedTeachers.length > 0 ? "#d903e4" : "black"} 
+              <Ionicons
+                name={selectedTeachers.length > 0 ? "filter" : "filter-outline"}
+                size={24}
+                color={selectedTeachers.length > 0 ? "#d903e4" : "black"}
               />
               {selectedTeachers.length > 0 && (
                 <View style={styles.filterBadge}>
@@ -121,18 +145,22 @@ export default function ScheduleSlots() {
           ),
         }}
       />
-      
+
       <CustomCalendar
         selectedDate={selectedDate}
         setSelectedDate={setSelectedDate}
         markedDates={markedDates}
       />
-      
+
       {filteredSlots.length > 0 ? (
         <FlashList
           data={filteredSlots}
-          renderItem={({ item }) => (
-            <SlotCard item={item} selectedSlot={selectedSlot} setSelectedSlot={setSelectedSlot} />
+          renderItem={({item}) => (
+            <SlotCard
+              item={item}
+              selectedSlot={selectedSlot}
+              onSlotPress={handleSlotPress}
+            />
           )}
           keyExtractor={(item) => item.id.toString()}
           estimatedItemSize={100}
@@ -140,7 +168,7 @@ export default function ScheduleSlots() {
       ) : (
         <Text style={styles.noSlotsText}>Нет доступных слотов</Text>
       )}
-    
+
       <TouchableOpacity
         style={[styles.applyButton, !selectedSlot && styles.disabledButton]}
         onPress={() => setModalVisible(true)}
@@ -165,8 +193,15 @@ export default function ScheduleSlots() {
         teachers={teachers}
         selectedTeachers={selectedTeachers}
         onTeacherSelect={toggleTeacherSelection}
-        onTeacherPress={handleTeacherPress}
         onReset={() => setSelectedTeachers([])}
+      />
+
+      <SlotInfoModal
+        visible={slotInfoModalVisible}
+        onClose={() => setSlotInfoModalVisible(false)}
+        slot={activeSlot}
+        onSelectSlot={handleSelectSlot}
+        onTeacherPress={handleTeacherPress}
       />
 
       <TeacherProfileModal
@@ -204,7 +239,7 @@ const styles = StyleSheet.create({
   noSlotsText: {
     flex: 1,
     justifyContent: 'center',
-    alignItems: 'center', 
+    alignItems: 'center',
     textAlign: 'center',
     marginTop: 100,
     fontSize: 18,

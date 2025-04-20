@@ -1,30 +1,40 @@
-import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity } from 'react-native';
-import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
-import { useEffect, useState } from 'react';
-import { FlashList } from '@shopify/flash-list';
-import { Ionicons } from '@expo/vector-icons';
-import { format, parseISO } from 'date-fns';
-import { ru } from 'date-fns/locale';
+import {View, Text, StyleSheet, ScrollView, Image, TouchableOpacity} from 'react-native';
+import {useLocalSearchParams, useRouter, Stack} from 'expo-router';
+import {useEffect, useState} from 'react';
+import {FlashList} from '@shopify/flash-list';
+import {Ionicons} from '@expo/vector-icons';
+import {format, parseISO} from 'date-fns';
+import {ru} from 'date-fns/locale';
 
 import lessons from '../../../../scratch-data/lessons.json';
 import users from '../../../../scratch-data/users.json';
 import groups from '../../../../scratch-data/groups.json';
 import classrooms from '../../../../scratch-data/classrooms.json';
 import subscriptions from '../../../../scratch-data/subscriptions.json';
-import {useSession} from "../../../../context/ctx";
-import TeacherCard from '../../../../components/TeacherCard';
-import TeacherProfileModal from '../../../../components/modals/TeacherProfileModal';
+import {TeacherCard, TeacherProfileModal, ConfirmationModal} from '../../../../components';
+import {useSelector} from "react-redux";
+
+const parseTime = (timeData) => format(parseISO(timeData), 'HH:mm', {locale: ru})
 
 export default function LessonScreen() {
   const router = useRouter();
-  const { id } = useLocalSearchParams();
+  const {id} = useLocalSearchParams();
+
+  const userRole = useSelector(state => state.session.role);
+  const [role, setRole] = useState(userRole);
+
   const [lessonData, setLessonData] = useState(null);
   const [teacherProfileVisible, setTeacherProfileVisible] = useState(false);
+  const [selectedTeacher, setSelectedTeacher] = useState(null);
   const [hasValidSubscription, setHasValidSubscription] = useState(false);
-
-  const { session } = useSession();
+  const [isStudentInGroup, setIsStudentInGroup] = useState(false);
+  const [cancelModalVisible, setCancelModalVisible] = useState(false);
 
   const currentUserId = 'e1a5c879-9a1d-45c2-8f0d-d3442f2dcd1a';
+
+  useEffect(() => {
+    setRole(userRole);
+  }, [userRole])
 
   useEffect(() => {
     const lesson = lessons.find(l => l.id === Number(id));
@@ -48,6 +58,10 @@ export default function LessonScreen() {
     });
     setHasValidSubscription(hasValid);
 
+    // Проверяем, числится ли студент в группе
+    const studentInGroup = group?.students?.some(studentId => studentId === currentUserId) || false;
+    setIsStudentInGroup(studentInGroup);
+
     setLessonData({
       ...lesson,
       group,
@@ -66,10 +80,22 @@ export default function LessonScreen() {
   const showJoinButton =
     lessonData.group &&
     lessonData.currentStudents < lessonData.maxStudents &&
-    session === "Student";
+    role === "Student" &&
+    !isStudentInGroup;
+
+  const showCancelButton =
+    lessonData.group &&
+    role === "Student" &&
+    isStudentInGroup;
 
   const handleJoinGroup = () => {
     console.log('Joining group:', lessonData.group.id);
+  };
+
+  const handleCancelLesson = () => {
+    console.log('Cancelling lesson for group:', lessonData.group.id);
+    setCancelModalVisible(false);
+    // Здесь будет логика отмены занятия
   };
 
   const handleGoToSubscriptions = () => {
@@ -83,7 +109,7 @@ export default function LessonScreen() {
           title: "Информация о занятии",
           headerLeft: () => (
             <TouchableOpacity onPress={() => router.back()}>
-              <Ionicons name="chevron-back" size={24} color="black" />
+              <Ionicons name="chevron-back" size={24} color="black"/>
             </TouchableOpacity>
           ),
         }}
@@ -129,7 +155,7 @@ export default function LessonScreen() {
         <View style={styles.infoRow}>
           <Text style={styles.label}>Время:</Text>
           <Text style={styles.value}>
-            {format(parseISO(lessonData.startTime), 'HH:mm', { locale: ru })} - {format(parseISO(lessonData.finishTime), 'HH:mm', { locale: ru })}
+            {`${parseTime(lessonData.startTime)} - ${parseTime(lessonData.finishTime)}`}
           </Text>
         </View>
 
@@ -146,8 +172,13 @@ export default function LessonScreen() {
         <Text style={styles.sectionTitle}>Преподаватели</Text>
         <FlashList
           data={lessonData.teachers}
-          renderItem={({ item }) => (
-            <TeacherCard teacher={item} onPress={setTeacherProfileVisible}/>
+          renderItem={({item}) => (
+            <TeacherCard
+              teacher={item}
+              onPress={() => {
+                setSelectedTeacher(item);
+                setTeacherProfileVisible(true)
+              }}/>
           )}
           estimatedItemSize={100}
           keyExtractor={(item) => item.id.toString()}
@@ -155,8 +186,11 @@ export default function LessonScreen() {
         />
         <TeacherProfileModal
           visible={teacherProfileVisible}
-          onClose={() => setTeacherProfileVisible(false)}
-          teacher={teacher}
+          onClose={() => {
+            setTeacherProfileVisible(false)
+            setSelectedTeacher(null)
+          }}
+          teacher={selectedTeacher}
         />
       </View>
 
@@ -179,6 +213,27 @@ export default function LessonScreen() {
           )}
         </View>
       )}
+
+      {showCancelButton && (
+        <View style={styles.buttonContainer}>
+          <TouchableOpacity
+            style={styles.cancelButton}
+            onPress={() => setCancelModalVisible(true)}
+          >
+            <Text style={styles.buttonText}>Отменить занятие</Text>
+          </TouchableOpacity>
+        </View>
+      )}
+
+      <ConfirmationModal
+        visible={cancelModalVisible}
+        onClose={() => setCancelModalVisible(false)}
+        onConfirm={handleCancelLesson}
+        title="Отмена занятия"
+        message="Вы уверены, что хотите отменить это занятие? Это действие нельзя будет отменить."
+        confirmText="Да, отменить"
+        cancelText="Нет, вернуться"
+      />
     </ScrollView>
   );
 }
@@ -235,6 +290,13 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     borderRadius: 12,
     alignItems: 'center',
+  },
+  cancelButton: {
+    backgroundColor: '#ff3b30',
+    paddingVertical: 16,
+    borderRadius: 12,
+    alignItems: 'center',
+    width: '100%',
   },
   buttonText: {
     color: '#fff',

@@ -1,16 +1,17 @@
+import {useState, useEffect} from "react";
 import Octicons from '@expo/vector-icons/Octicons';
 import { Tabs } from 'expo-router';
 import { globalStyles, HEADER_BACKGROUND, BOTTOM_TAB_BACKGROUND } from "../../../styles/globalStyles";
-import { useSession } from "../../../context/ctx";
-import { useState, useEffect } from "react";
+import {useSelector} from "react-redux";
 
 const TabsLayout = () => {
-  const { session } = useSession();
-  const [role, setRole] = useState(session);
+  const userRole = useSelector(state => state.session.role);
+  const [role, setRole] = useState(userRole);
 
   useEffect(() => {
-    setRole(session);
-  }, [session]);
+    setRole(userRole);
+    console.log(`userRole = ${JSON.stringify(userRole)}`);
+  }, [userRole])
 
   return (
     <Tabs
@@ -53,7 +54,7 @@ const TabsLayout = () => {
           title: "Записаться на занятие",
           tabBarIcon: ({color}) => <Octicons name="repo" size={28} color={color} />,
         }}
-        redirect={role !== "Student"}
+        redirect={role !== "student"}
       />
       <Tabs.Screen
         name={"(teacher)"}
@@ -61,7 +62,7 @@ const TabsLayout = () => {
           title: "Управление занятиями",
           tabBarIcon: ({color}) => <Octicons name="checklist" size={28} color={color} />,
         }}
-        redirect={role !== "Teacher"}
+        redirect={role !== "teacher"}
       />
       <Tabs.Screen
         name="(profile)"

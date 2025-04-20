@@ -1,22 +1,21 @@
-import {Text} from "react-native";
+import {useState, useEffect} from 'react';
 import {Redirect, Stack} from "expo-router";
-import {useSession} from "../../context/ctx";
+import {useSelector} from "react-redux";
+
 
 export default function AppLayout() {
-  const {session, isLoading} = useSession();
+  const isUserLoaded = useSelector(state => state.session.isLoaded);
+  const [loaded, setLoaded] = useState(isUserLoaded);
 
-  if (isLoading) {
-    console.log("Session loading...")
-    // todo: add loading screen
-    return <Text>Loading...</Text>;
-  }
+  useEffect(() => {
+    console.log('isUserLoaded = ', isUserLoaded);
+    setLoaded(isUserLoaded);
+  }, [isUserLoaded]);
 
-  if (!session) {
+  if (!loaded) {
     console.log("[AppLayout] Redirecting to /sign-in");
     return <Redirect href="/(auth)" />;
   }
-
-  console.log(`Entering session ${session}`)
 
   return (
     <Stack screenOptions={{headerShown: false}}>

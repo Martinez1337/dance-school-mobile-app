@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
-import { View, StyleSheet, SafeAreaView, TouchableOpacity, RefreshControl } from 'react-native';
-import { FlashList } from '@shopify/flash-list';
-import { Tabs, router } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import React, {useState} from 'react';
+import {View, StyleSheet, SafeAreaView, TouchableOpacity, RefreshControl} from 'react-native';
+import {FlashList} from '@shopify/flash-list';
+import {Tabs, router} from 'expo-router';
+import {Ionicons} from '@expo/vector-icons';
 
-import { LessonRequestCard, CreateActionModal } from '../../../../components';
+import {LessonRequestCard, CreateActionModal} from '../../../../components';
 import users from '../../../../scratch-data/users.json';
 
 // Фильтруем пользователей с ролью Student
@@ -38,7 +38,7 @@ const LessonRequestsScreen = () => {
   const handleRequestPress = (request) => {
     router.push({
       pathname: '/(app)/(shared)/lesson-request/[id]',
-      params: { id: request.id }
+      params: {id: request.id}
     });
   };
 
@@ -52,7 +52,8 @@ const LessonRequestsScreen = () => {
     router.push('/create-time-slot');
   };
 
-  const onRefreshHandler = () => {};
+  const onRefreshHandler = () => {
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -60,20 +61,20 @@ const LessonRequestsScreen = () => {
         options={{
           headerTitle: 'Заявки на занятия',
           headerRight: () => (
-            <TouchableOpacity 
+            <TouchableOpacity
               onPress={() => setIsCreateModalVisible(true)}
               style={styles.createButton}
             >
-              <Ionicons name="add-circle-outline" size={24} color="black" />
+              <Ionicons name="add-circle-outline" size={24} color="black"/>
             </TouchableOpacity>
           ),
         }}
       />
-      
+
       <View style={styles.content}>
         <FlashList
           data={requests}
-          renderItem={({ item }) => (
+          renderItem={({item}) => (
             <LessonRequestCard
               request={item}
               onPress={handleRequestPress}

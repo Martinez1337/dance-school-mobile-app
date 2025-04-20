@@ -32,7 +32,7 @@ const onSubmitHandler = async (values) => {
     data: requestBody,
     requiresAuth: false,
   });
-  console.log(`response: ${JSON.stringify(response)}`);
+  console.log(`register response: ${JSON.stringify(response)}`);
 }
 
 const SignUp = () => {
@@ -50,7 +50,7 @@ const SignUp = () => {
       }).catch(error => {
         console.log(error);
       });
-      console.log(`response: ${JSON.stringify(response)}`);
+      console.log(`fetched levels: ${JSON.stringify(response)}`);
       setLevels(response);
       setSelectedLevel(response[0].id);
       console.log(`selectedLevel: ${selectedLevel}`);

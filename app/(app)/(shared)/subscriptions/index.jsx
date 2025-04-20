@@ -3,9 +3,10 @@ import { Stack } from 'expo-router';
 import { useState, useEffect, useRef } from 'react';
 import { parseISO, isAfter } from 'date-fns';
 import { SubscriptionCard, ScrollIndicator } from '../../../../components';
+import { SCREEN_WIDTH, SUBSCRIPTION_CARD_WIDTH, SUBSCRIPTION_CARD_SPACING } from '../../../../constants';
+
 import subscriptionTemplates from '../../../../scratch-data/subscription-templates.json';
 import subscriptions from '../../../../scratch-data/subscriptions.json';
-import { SCREEN_WIDTH, SUBSCRIPTION_CARD_WIDTH, SUBSCRIPTION_CARD_SPACING } from '../../../../constants';
 
 export default function SubscriptionsScreen() {
   const [activeSubscriptions, setActiveSubscriptions] = useState([]);

@@ -6,6 +6,7 @@ export const FormField = ({
   label,
   values,
   touched,
+  disabled,
   errors,
   handleChange,
   handleBlur,
@@ -28,6 +29,7 @@ export const FormField = ({
         secureTextEntry={secureTextEntry}
         multiline={multiline}
         autoCapitalize={autoCapitalize}
+        editable={!disabled}
       />
       {touched[field] && errors[field] && (
         <Text style={styles.errorText}>{errors[field]}</Text>

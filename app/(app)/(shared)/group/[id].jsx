@@ -1,27 +1,25 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, ScrollView, Alert } from 'react-native';
-import { Stack, router, useLocalSearchParams } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+import React, {useState, useEffect} from 'react';
+import {View, Text, StyleSheet, SafeAreaView, ScrollView, Alert} from 'react-native';
+import {Stack, router, useLocalSearchParams} from 'expo-router';
+import {useSelector} from "react-redux";
+import {Ionicons} from '@expo/vector-icons';
 
-import { useSession } from '../../../../context/ctx';
-import { ConfirmationModal, StudentCard } from '../../../../components';
-
+import {ConfirmationModal, StudentCard} from '../../../../components';
 import groups from '../../../../scratch-data/groups.json';
 import users from '../../../../scratch-data/users.json';
 
 const GroupScreen = () => {
-  const { id } = useLocalSearchParams();
+  const {id} = useLocalSearchParams();
   const [group, setGroup] = useState(null);
   const [isConfirmationVisible, setIsConfirmationVisible] = useState(false);
   const [studentToDelete, setStudentToDelete] = useState(null);
-  const [currentUserId, setCurrentUserId] = useState('db8754e3-efc5-4af0-9e72-0d96e5a3d523'); // Для теста используем ID учителя
-  const { session } = useSession();
-  const [isTeacher, setIsTeacher] = useState(false);
+  const userRole = useSelector(state => state.session.role);
+  const [role, setRole] = useState(userRole);
 
   useEffect(() => {
-    setIsTeacher(session === "Teacher");
-  }, [session]);
-  
+    setRole(userRole)
+  }, [userRole])
+
   useEffect(() => {
     const foundGroup = groups.find(g => g.id === id);
     if (foundGroup) {
@@ -56,22 +54,22 @@ const GroupScreen = () => {
 
   const handleConfirmDelete = () => {
     console.log('Удаление студента:', studentToDelete.id);
-    
+
     // Обновляем состояние группы, удаляя студента
     const updatedStudents = group.students.filter(s => s.id !== studentToDelete.id);
     setGroup({
       ...group,
       students: updatedStudents
     });
-    
+
     setIsConfirmationVisible(false);
     setStudentToDelete(null);
-    
+
     // Показываем уведомление
     Alert.alert(
       "Успешно",
       `Ученик ${studentToDelete.firstName} ${studentToDelete.lastName} удален из группы`,
-      [{ text: "OK" }]
+      [{text: "OK"}]
     );
   };
 
@@ -92,23 +90,23 @@ const GroupScreen = () => {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Информация о группе</Text>
           <View style={styles.infoRow}>
-            <Ionicons name="people-outline" size={20} color="#666" />
+            <Ionicons name="people-outline" size={20} color="#666"/>
             <Text style={styles.infoText}>
               {group.students.length}/{group.maxStudentCapacity} учеников
             </Text>
           </View>
           <View style={styles.infoRow}>
-            <Ionicons name="school-outline" size={20} color="#666" />
+            <Ionicons name="school-outline" size={20} color="#666"/>
             <Text style={styles.infoText}>Уровень: {group.level}</Text>
           </View>
           <View style={styles.infoRow}>
-            <Ionicons name="person-outline" size={20} color="#666" />
+            <Ionicons name="person-outline" size={20} color="#666"/>
             <Text style={styles.infoText}>
               Преподаватель: {group.teacher.firstName} {group.teacher.lastName}
             </Text>
           </View>
           <View style={styles.infoRow}>
-            <Ionicons name="information-circle-outline" size={20} color="#666" />
+            <Ionicons name="information-circle-outline" size={20} color="#666"/>
             <Text style={styles.infoText}>Описание: {group.description}</Text>
           </View>
         </View>
@@ -122,7 +120,7 @@ const GroupScreen = () => {
                 student={student}
                 onPress={() => handleStudentPress(student)}
                 onDelete={() => handleDeleteStudent(student)}
-                isTeacher={isTeacher}
+                isTeacher={role === "teacher"}
               />
             ))
           ) : (

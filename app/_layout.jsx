@@ -1,9 +1,15 @@
-import {Slot} from "expo-router";
 import React, {useEffect, useState} from 'react';
+import {Slot} from "expo-router";
 import {useFonts} from 'expo-font';
 import * as SplashScreen from 'expo-splash-screen';
-import {SessionProvider} from "../context/ctx";
 import {StatusBar} from "expo-status-bar";
+import {Provider} from "react-redux";
+
+import store from "../redux/store";
+import {setUser} from "../redux/slices/userSlice";
+import {setSession} from "../redux/slices/sessionSlice";
+import {setLevel} from "../redux/slices/levelSlice";
+import {loadLevelFromStorage, loadSessionFromStorage, loadUserFromStorage} from "../util/loadData";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -18,11 +24,37 @@ const RootLayout = () => {
   });
 
   useEffect(() => {
-    if (fontsLoadingError) throw fontsLoadingError;
+    const prepareApp = async () => {
+      try {
+        if (fontsLoadingError) throw fontsLoadingError;
 
-    if (fontsLoaded) {
-      setAppIsReady(true);
-    }
+        if (fontsLoaded) {
+          // Загружаем данные сессии из AsyncStorage
+          const storedSession = await loadSessionFromStorage();
+          if (storedSession && Object.keys(storedSession).length > 0) {
+            store.dispatch(setSession({...storedSession, fromStorage: true}));
+          }
+
+          // Загружаем данные пользователя из AsyncStorage
+          const storedUser = await loadUserFromStorage();
+          if (storedUser && Object.keys(storedUser).length > 0) {
+            store.dispatch(setUser({...storedUser, fromStorage: true}));
+          }
+
+          // Загружаем данные пользователя из AsyncStorage
+          const storedLevel = await loadLevelFromStorage();
+          if (storedLevel && Object.keys(storedLevel).length > 0) {
+            store.dispatch(setLevel({...storedLevel, fromStorage: true}));
+          }
+
+          setAppIsReady(true);
+        }
+      } catch (error) {
+        console.error('Error preparing app:', error);
+      }
+    };
+
+    prepareApp();
   }, [fontsLoaded]);
 
   useEffect(() => {
@@ -40,12 +72,12 @@ const RootLayout = () => {
   }
 
   return (
-    <SessionProvider>
+    <Provider store={store}>
       <>
-        <Slot />
-        <StatusBar style={"dark"} />
+        <Slot/>
+        <StatusBar style={"dark"}/>
       </>
-    </SessionProvider>
+    </Provider>
   );
 }
 

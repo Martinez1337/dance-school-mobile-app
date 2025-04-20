@@ -48,12 +48,6 @@ export default function StudentLayout() {
           presentation: 'push'
         }}
       />
-      <Stack.Screen
-        name="group-details"
-        options={{
-          title: 'Детали занятия группы',
-        }}
-      />
     </Stack>
   );
 } 

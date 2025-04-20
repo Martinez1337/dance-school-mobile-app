@@ -26,22 +26,22 @@ export const authorizationValidationSchema = Yup.object().shape({
     .required("Пожалуйста, введите зарегистрированный email"),
   password: Yup.string()
     .required("Пожалуйста, введите пароль")
-    .min(6, "Пароль должен содержать минимум 6 символов"),
+    .min(8, "Пароль должен содержать минимум 8 символов"),
 });
 
 export const editUserInfoValidationSchema = Yup.object().shape({
-  firstName: Yup.string()
+  first_name: Yup.string()
     .required('Имя обязательно')
     .min(2, 'Имя должно содержать минимум 2 символа'),
-  lastName: Yup.string()
+  last_name: Yup.string()
     .required('Фамилия обязательна')
     .min(2, 'Фамилия должна содержать минимум 2 символа'),
-  middleName: Yup.string()
+  middle_name: Yup.string()
     .min(2, 'Отчество должно содержать минимум 2 символа'),
   email: Yup.string()
     .required('Email обязателен')
     .matches(emailRegExp, 'Некорректный email'),
-  phoneNumber: Yup.string()
+  phone_number: Yup.string()
     .required('Номер телефона обязателен')
     .matches(phoneRegExp, 'Номер телефона должен быть в формате +7XXXXXXXXXX'),
   description: Yup.string()
@@ -49,13 +49,16 @@ export const editUserInfoValidationSchema = Yup.object().shape({
 });
 
 export const editPasswordValidationSchema = Yup.object().shape({
+  oldPassword: Yup.string()
+    .required('Старый пароль обязателен')
+    .min(8, 'Пароль должен содержать минимум 8 символов'),
   newPassword: Yup.string()
     .required('Новый пароль обязателен')
-    .min(8, 'Пароль должен содержать минимум 8 символов')
-    .matches(
-      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d]{8,}$/,
-      'Пароль должен содержать хотя бы одну заглавную букву, одну строчную букву и одну цифру'
-    ),
+    .min(8, 'Пароль должен содержать минимум 8 символов'),
+    // .matches(
+    //   /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d]{8,}$/,
+    //   'Пароль должен содержать хотя бы одну заглавную букву, одну строчную букву и одну цифру'
+    // )
   confirmNewPassword: Yup.string()
     .required('Подтверждение пароля обязательно')
     .oneOf([Yup.ref('newPassword')], 'Пароли должны совпадать'),

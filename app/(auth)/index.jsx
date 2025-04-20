@@ -2,32 +2,55 @@ import {SafeAreaView, StyleSheet, Text, TouchableOpacity, View} from 'react-nati
 import {KeyboardAwareScrollView} from "react-native-keyboard-aware-scroll-view";
 import {Formik} from "formik";
 import {Link, router} from "expo-router";
+import {useDispatch} from "react-redux";
+
 import {authorizationValidationSchema} from "../../validation/validation";
 import {FormField} from "../../components";
 import {globalStyles} from "../../styles/globalStyles";
-import {useSession} from "../../context/ctx";
-import { login } from '../../util/apiService';
+import {apiRequest, login} from '../../util/apiService';
+import {setSession} from "../../redux/slices/sessionSlice";
+import {setUser} from "../../redux/slices/userSlice";
+import {setLevel} from "../../redux/slices/levelSlice";
 
 const isFormValid = (isValid, touched) => {
   return isValid && Object.keys(touched).length !== 0;
 }
 
-async function onSignInHandler(values) {
-  // console.log(`onSignInHandler: ${JSON.stringify(values)}`);
-  // const requestBody = {
-  //   grant_type: null,
-  //   username: values.email,
-  //   password: values.password,
-  //   scope: null,
-  //   client_id: null,
-  //   client_secret: null,
-  // }
-  // const response = await login(requestBody);
-  // console.log(`response: ${JSON.stringify(response)}`);
+const onSignInHandler = async (values, dispatch) => {
+  console.log(`onSignInHandler: ${JSON.stringify(values)}`);
+  const requestBody = {
+    grant_type: null,
+    username: values.email,
+    password: values.password,
+    scope: null,
+    client_id: null,
+    client_secret: null,
+  }
+
+  //todo Написать обработку ошибок
+  const authResponse = await login(requestBody)
+    .catch(error => console.log(error))
+
+  console.log(`authResponse: ${JSON.stringify(authResponse)}`);
+
+  const meResponse = await apiRequest({
+    method: 'GET',
+    url: '/auth/me'
+  }).catch(error => console.log(error))
+
+  console.log(`meResponse: ${JSON.stringify(meResponse)}`);
+
+  dispatch(setSession(meResponse))
+  dispatch(setUser(meResponse.user))
+  if (meResponse.level) {
+    dispatch(setLevel(meResponse.level))
+  }
+
+  router.replace("/(tabs)/(profile)");
 }
 
 const Index = () => {
-  const { signIn } = useSession();
+  const dispatch = useDispatch();
   return (
     <SafeAreaView style={globalStyles.mainSafeArea}>
       <KeyboardAwareScrollView
@@ -41,10 +64,7 @@ const Index = () => {
             email: "",
             password: "",
           }}
-          onSubmit={() => {
-            signIn("Student");
-            router.replace("/(tabs)/(profile)");
-          }}
+          onSubmit={(values) => onSignInHandler(values, dispatch)}
           validationSchema={authorizationValidationSchema}
         >
           {({

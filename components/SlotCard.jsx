@@ -1,12 +1,15 @@
 import React from 'react';
-import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { format, parseISO } from 'date-fns';
+import { Image } from 'expo-image';
 
-const SlotCard = ({ item, selectedSlot, setSelectedSlot }) => {
+const SlotCard = ({ item, selectedSlot, onSlotPress }) => {
   return (
     <TouchableOpacity
       style={[styles.slotCard, selectedSlot === item ? styles.selectedSlot : null]}
-      onPress={() => setSelectedSlot(selectedSlot === item ? null : item)}
+      onPress={() => {
+        if (onSlotPress) onSlotPress(item);
+      }}
     >
       <View style={styles.slotHeader}>
         <Text style={styles.slotTime}>{`${format(parseISO(item.startTime), 'HH:mm')} - ${format(parseISO(item.endTime), 'HH:mm')}`}</Text>
@@ -44,10 +47,12 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: 'bold',
     color: '#333',
+    fontFamily: "os-regular",
   },
   slotDanceType: {
     fontSize: 14,
     color: '#666',
+    fontFamily: "os-regular",
   },
   slotFooter: {
     flexDirection: 'row',
@@ -62,6 +67,7 @@ const styles = StyleSheet.create({
   teacherName: {
     fontSize: 14,
     color: '#333',
+    fontFamily: "os-regular",
   },
   selectedSlot: {
     borderColor: '#d903e4',

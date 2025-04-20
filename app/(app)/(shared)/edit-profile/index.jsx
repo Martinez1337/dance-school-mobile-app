@@ -1,50 +1,46 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, Alert } from 'react-native';
-import { Stack, router } from 'expo-router';
-import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
-import { Formik } from 'formik';
-import { Ionicons } from '@expo/vector-icons';
+import React, {useState, useEffect} from 'react';
+import {View, Text, StyleSheet, SafeAreaView, TouchableOpacity, Alert} from 'react-native';
+import {router, Stack} from 'expo-router';
+import {KeyboardAwareScrollView} from 'react-native-keyboard-aware-scroll-view';
+import {Formik} from 'formik';
+import {Ionicons} from '@expo/vector-icons';
+import {useDispatch, useSelector} from "react-redux";
 
-import { editUserInfoValidationSchema, editPasswordValidationSchema } from '../../../../validation/validation';
-import { FormField } from '../../../../components';
-import SelectionModal from '../../../../components/modals/SelectionModal';
-import { apiRequest } from '../../../../util/apiService';
+import {editUserInfoValidationSchema, editPasswordValidationSchema} from '../../../../validation/validation';
+import {FormField} from '../../../../components';
+import {SelectionModal} from '../../../../components';
+import {apiRequest} from '../../../../util/apiService';
+import {updateUserField} from "../../../../redux/slices/userSlice";
+import {updateLevelField} from "../../../../redux/slices/levelSlice";
 
-const user = {
-  userId: "e1a5c879-9a1d-45c2-8f0d-d3442f2dcd1a",
-  email: "ivanov.ivan@edu.hse.ru",
-  firstName: "Иван",
-  lastName: "Иванов",
-  middleName: "Александрович",
-  phoneNumber: "+79991234567",
-  photo: "https://randomuser.me/api/portraits/men/1.jpg",
-  role: "Student",
-  description: "Увлекается современными танцами и хип-хопом.",
-  level: "Intermediate"
+const fetchLevels = async (setLevels) => {
+  const response = await apiRequest({
+    method: 'GET',
+    url: '/levels',
+    requiresAuth: false,
+  }).catch(error => {
+    console.log(error);
+  });
+  console.log(`response: ${JSON.stringify(response)}`);
+  setLevels(response);
 };
 
 const EditProfileScreen = () => {
+  const user = useSelector((state) => state.user);
+  const role = useSelector((state) => state.session.role);
+  const id = useSelector((state) => state.session.id);
+  const level_id = useSelector(state => state.level.id);
+  const dispatch = useDispatch();
+
   const [isEditingPassword, setIsEditingPassword] = useState(false);
   const [isLevelModalVisible, setIsLevelModalVisible] = useState(false);
-  const [selectedLevel, setSelectedLevel] = useState('');
+  const [selectedLevel, setSelectedLevel] = useState(level_id);
   const [levels, setLevels] = useState([]);
 
   useEffect(() => {
-    console.log('HERE')
-    const fetchLevels = async () => {
-      const response = await apiRequest({
-        method: 'GET',
-        url: '/levels',
-        requiresAuth: false,
-      }).catch(error => {
-        console.log(error);
-      });
-      console.log(`response: ${JSON.stringify(response)}`);
-      setLevels(response);
-      setSelectedLevel(response[0].id);
-      console.log(`selectedLevel: ${selectedLevel}`);
-    };
-    fetchLevels();
+    if (role === "student") {
+      fetchLevels(setLevels);
+    }
   }, []);
 
   const getSelectedLevelName = () => {
@@ -58,15 +54,34 @@ const EditProfileScreen = () => {
       'Подтверждение',
       'Вы уверены, что хотите сохранить изменения в профиле?',
       [
-        {
-          text: 'Отмена',
-          style: 'cancel',
-        },
+        {text: 'Отмена', style: 'cancel'},
         {
           text: 'Сохранить',
-          onPress: () => {
-            console.log('Saving profile:', values);
-            router.back();
+          onPress: async () => {
+            const requestBody = {
+              first_name: values.first_name,
+              last_name: values.last_name,
+              middle_name: values.middle_name,
+              description: values.description,
+              ...(values.email !== user.email && {email: values.email}),
+              ...(values.phone_number !== user.phone_number && {phone_number: values.phone_number}),
+              ...(role === 'student' && {level_id: selectedLevel})
+            }
+            try {
+              const patchResponse = await apiRequest({
+                method: 'PATCH',
+                url: role === 'student' ? `/students/${id}` : `/teachers/${id}`,
+                data: requestBody,
+              });
+              console.log(`patchResponse: ${JSON.stringify(patchResponse)}`);
+              dispatch(updateUserField(patchResponse.user))
+              if (role === 'student') {
+                dispatch(updateLevelField(patchResponse.level));
+              }
+            } catch (error) {
+              console.log(error)
+            }
+            // router.back();
           },
         },
       ]
@@ -78,10 +93,7 @@ const EditProfileScreen = () => {
       'Подтверждение',
       'Вы уверены, что хотите изменить пароль?',
       [
-        {
-          text: 'Отмена',
-          style: 'cancel',
-        },
+        {text: 'Отмена', style: 'cancel'},
         {
           text: 'Изменить',
           onPress: () => {
@@ -109,11 +121,11 @@ const EditProfileScreen = () => {
         {!isEditingPassword ? (
           <Formik
             initialValues={{
-              firstName: user.firstName,
-              lastName: user.lastName,
-              middleName: user.middleName,
+              last_name: user.last_name,
+              first_name: user.first_name,
+              middle_name: user.middle_name,
               email: user.email,
-              phoneNumber: user.phoneNumber,
+              phone_number: user.phone_number,
               description: user.description,
             }}
             onSubmit={handleSaveProfile}
@@ -130,7 +142,7 @@ const EditProfileScreen = () => {
               }) => (
               <View>
                 <FormField
-                  field="lastName"
+                  field="last_name"
                   label="Фамилия"
                   autoCapitalize="words"
                   values={values}
@@ -141,7 +153,7 @@ const EditProfileScreen = () => {
                 />
 
                 <FormField
-                  field="firstName"
+                  field="first_name"
                   label="Имя"
                   autoCapitalize="words"
                   values={values}
@@ -152,7 +164,7 @@ const EditProfileScreen = () => {
                 />
 
                 <FormField
-                  field="middleName"
+                  field="middle_name"
                   label="Отчество"
                   autoCapitalize="words"
                   values={values}
@@ -173,7 +185,7 @@ const EditProfileScreen = () => {
                 />
 
                 <FormField
-                  field="phoneNumber"
+                  field="phone_number"
                   label="Номер телефона"
                   values={values}
                   touched={touched}
@@ -182,16 +194,18 @@ const EditProfileScreen = () => {
                   handleBlur={handleBlur}
                 />
 
-                <View style={styles.section}>
-                  <Text style={styles.label}>Уровень</Text>
-                  <TouchableOpacity
-                    style={styles.selectInput}
-                    onPress={() => setIsLevelModalVisible(true)}
-                  >
-                    <Text style={styles.selectText}>{getSelectedLevelName()}</Text>
-                    <Ionicons name="chevron-down" size={20} color="#666" />
-                  </TouchableOpacity>
-                </View>
+                {role === "student" &&
+                  <View style={styles.section}>
+                    <Text style={styles.label}>Уровень</Text>
+                    <TouchableOpacity
+                      style={styles.selectInput}
+                      onPress={() => setIsLevelModalVisible(true)}
+                    >
+                      <Text style={styles.selectText}>{getSelectedLevelName()}</Text>
+                      <Ionicons name="chevron-down" size={20} color="#666"/>
+                    </TouchableOpacity>
+                  </View>
+                }
 
                 <SelectionModal
                   visible={isLevelModalVisible}
@@ -217,7 +231,7 @@ const EditProfileScreen = () => {
 
                 <TouchableOpacity
                   style={[styles.button, styles.saveButton]}
-                  onPress={handleSubmit}
+                  onPress={() => handleSubmit()}
                   disabled={!isValid}
                 >
                   <Text style={styles.buttonText}>Сохранить изменения</Text>
@@ -237,6 +251,7 @@ const EditProfileScreen = () => {
         ) : (
           <Formik
             initialValues={{
+              oldPassword: '',
               newPassword: '',
               confirmNewPassword: '',
             }}
@@ -253,6 +268,17 @@ const EditProfileScreen = () => {
                 isValid,
               }) => (
               <View>
+                <FormField
+                  field="oldPassword"
+                  label="Старый пароль"
+                  secureTextEntry
+                  values={values}
+                  touched={touched}
+                  errors={errors}
+                  handleChange={handleChange}
+                  handleBlur={handleBlur}
+                />
+
                 <FormField
                   field="newPassword"
                   label="Новый пароль"
@@ -277,7 +303,7 @@ const EditProfileScreen = () => {
 
                 <TouchableOpacity
                   style={[styles.button, styles.saveButton]}
-                  onPress={handleSubmit}
+                  onPress={() => handleSubmit()}
                   disabled={!isValid}
                 >
                   <Text style={styles.buttonText}>Изменить пароль</Text>

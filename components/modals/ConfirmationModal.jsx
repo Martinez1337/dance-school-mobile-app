@@ -15,10 +15,16 @@ const ConfirmationModal = ({ visible, onClose, onConfirm, title, message, confir
               <Text style={styles.modalTitleText}>{title}</Text>
               <Text style={styles.modalText}>{message}</Text>
               <View style={styles.buttonsContainer}>
-                <TouchableOpacity style={styles.confirmButton} onPress={onConfirm}>
+                <TouchableOpacity 
+                  style={styles.confirmButton} 
+                  onPress={onConfirm}
+                >
                   <Text style={styles.buttonText}>{confirmText}</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.cancelButton} onPress={onClose}>
+                <TouchableOpacity 
+                  style={styles.cancelButton} 
+                  onPress={onClose}
+                >
                   <Text style={styles.cancelButtonText}>{cancelText}</Text>
                 </TouchableOpacity>
               </View>
@@ -36,57 +42,68 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    padding: 20,
   },
   modalView: {
     backgroundColor: '#fff',
-    padding: 20,
+    padding: 24,
     borderRadius: 20,
     alignItems: 'center',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
     elevation: 5,
-    width: '80%',
+    width: '100%',
+    maxWidth: 350,
   },
   modalTitleText: {
     fontSize: 20,
     fontWeight: 'bold',
-    marginBottom: 10,
+    marginBottom: 16,
     textAlign: 'center',
+    fontFamily: 'os-bold',
   },
   modalText: {
     fontSize: 16,
-    marginBottom: 20,
+    marginBottom: 24,
     textAlign: 'center',
+    fontFamily: 'os-regular',
+    lineHeight: 22,
+    paddingHorizontal: 4,
   },
   buttonsContainer: {
     flexDirection: 'row',
-    justifyContent: 'center',
+    justifyContent: 'space-between',
     width: '100%',
+    paddingHorizontal: 4,
   },
   confirmButton: {
     backgroundColor: '#d903e4',
-    paddingVertical: 10,
+    paddingVertical: 14,
     paddingHorizontal: 20,
-    borderRadius: 10,
-    marginRight: 35,
+    borderRadius: 20,
+    flexBasis: '48%',
   },
   cancelButton: {
-    padding: 10,
-    borderRadius: 10,
-    marginLeft: 35,
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+    borderRadius: 20,
+    flexBasis: '48%',
+    backgroundColor: 'transparent',
   },
   buttonText: {
     color: '#fff',
     fontSize: 16,
     fontWeight: 'bold',
     textAlign: 'center',
+    fontFamily: 'os-bold',
   },
   cancelButtonText: {
     color: '#000',
     fontSize: 16,
     fontWeight: 'bold',
     textAlign: 'center',
+    fontFamily: 'os-bold',
   },
 });
 

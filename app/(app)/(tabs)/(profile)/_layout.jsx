@@ -1,13 +1,17 @@
-import React from 'react'
 import {Stack, useRouter} from "expo-router";
-import {globalStyles, HEADER_BACKGROUND} from "../../../../styles/globalStyles";
 import {TouchableOpacity} from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import {useSession} from "../../../../context/ctx";
+import {useDispatch} from "react-redux";
+
+import {globalStyles, HEADER_BACKGROUND} from "../../../../styles/globalStyles";
+import {logout} from "../../../../util/apiService";
+import {clearUser} from "../../../../redux/slices/userSlice";
+import {clearSession} from "../../../../redux/slices/sessionSlice";
+import {clearLevel} from "../../../../redux/slices/levelSlice";
 
 const ProfileLayout = () => {
   const router = useRouter();
-  const { signOut } = useSession()
+  const dispatch = useDispatch();
 
   return (
     <Stack
@@ -25,9 +29,11 @@ const ProfileLayout = () => {
           headerRight: () => (
             <TouchableOpacity
               style={{marginRight: 5}}
-              onPress={() => {
-                signOut();
-                // router.push("/settings")
+              onPress={async () => {
+                await logout();
+                dispatch(clearSession());
+                dispatch(clearUser());
+                dispatch(clearLevel());
               }}
             >
               <Ionicons name="log-out-outline" size={24} color="black"/>
@@ -39,17 +45,6 @@ const ProfileLayout = () => {
               style={{marginLeft: 5}}
             >
               <Ionicons name="people-outline" size={24} color="black"/>
-            </TouchableOpacity>
-          )
-        }}
-      />
-      <Stack.Screen
-        name={"settings"}
-        options={{
-          title: "Настройки",
-          headerLeft: () => (
-            <TouchableOpacity style={globalStyles.backButton} onPress={() => router.back()}>
-              <Ionicons name="arrow-back" size={24} color="black"/>
             </TouchableOpacity>
           )
         }}

@@ -4,23 +4,22 @@ import {Image} from 'expo-image';
 import {KeyboardAwareScrollView} from "react-native-keyboard-aware-scroll-view";
 import {useRouter} from 'expo-router';
 import {Ionicons} from '@expo/vector-icons';
-import { useSession } from '../../../../context/ctx';
 import {MAX_DESCRIPTION_LENGTH} from "../../../../constants";
 import subscriptions from '../../../../scratch-data/subscriptions.json';
-import users from '../../../../scratch-data/users.json';
-
-const user = users[0];
+import {useSelector} from "react-redux";
 
 const Profile = () => {
+  const user = useSelector(state => state.user);
+  const role = useSelector(state => state.session.role);
+  const levelName = useSelector(state => state.level.name);
   const router = useRouter();
-  const { session, signIn } = useSession();
-  const [sessionRole, setSessionRole] = useState(session);
+
   const [description, setDescription] = useState(user.description);
   const [isSaved, setIsSaved] = useState(false);
-  const [activeSubscriptions, setActiveSubscriptions] = useState([]);
+  const [activeSubscriptions, setActiveSubscriptions] = useState(user.subscriptions);
 
   useEffect(() => {
-    if (user.role === 'Student') {
+    if (user.role === 'student') {
       // Получаем активные подписки пользователя
       const userSubscriptions = subscriptions
         .filter(sub => 
@@ -31,10 +30,6 @@ const Profile = () => {
       setActiveSubscriptions(userSubscriptions);
     }
   }, []);
-
-  useEffect(() => {
-    setSessionRole(session);
-  }, [session]);
 
   const handleSave = () => {
     console.log('Description saved:', description);
@@ -55,14 +50,6 @@ const Profile = () => {
     router.push('/(app)/(shared)/edit-profile');
   };
 
-  const handleSwitchRole = () => {
-    if (session === "Student") {
-      signIn("Teacher");
-    } else {
-      signIn("Student");
-    }
-  };
-
   return (
     <SafeAreaView style={styles.container}>
       <KeyboardAwareScrollView 
@@ -74,26 +61,22 @@ const Profile = () => {
             <Image
               style={styles.profileImage}
               source={user.photo}
-              placeholder={require("../../../../assets/images/placeholder-image.png")}
+              placeholder={require("../../../../assets/images/user-profile.png")}
+              contentFit={'cover'}
+              placeholderContentFit={"cover"}
             />
-            <TouchableOpacity 
-              style={styles.editButton}
-              onPress={handleEditProfile}
-            >
-              <Ionicons name="pencil" size={18} color="white" />
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.switchRoleButton}
-              onPress={handleSwitchRole}
-            >
-              <Ionicons name="swap-horizontal" size={18} color="white" />
-            </TouchableOpacity>
           </View>
+          <TouchableOpacity
+            style={styles.editButton}
+            onPress={handleEditProfile}
+          >
+            <Ionicons name="pencil" size={18} color="white" />
+          </TouchableOpacity>
           <View style={styles.nameContainer}>
-            <Text style={styles.userNameText}>{user.lastName} {user.firstName} {user.middleName}</Text>
+            <Text style={styles.userNameText}>{user.last_name} {user.first_name} {user.middle_name}</Text>
           </View>
           <Text style={styles.userRoleText}>
-            {sessionRole === 'Student' ? 'Ученик, ' + user.level + ' уровень' : 'Преподаватель'}
+            {role === 'student' ? 'Ученик, ' + levelName : 'Преподаватель'}
           </Text>
         </View>
 
@@ -105,10 +88,10 @@ const Profile = () => {
 
           <View style={styles.contactDataLine}>
             <Ionicons name="call-outline" size={24} color="black"/>
-            <Text style={styles.contactDataText}>{user.phoneNumber}</Text>
+            <Text style={styles.contactDataText}>{user.phone_number}</Text>
           </View>
 
-          {sessionRole === 'Student' && (
+          {user.role === 'student' && (
             <View style={styles.subscriptionsSection}>
               <View style={styles.sectionHeader}>
                 <Text style={styles.sectionTitle}>Мои абонементы</Text>
@@ -121,28 +104,28 @@ const Profile = () => {
                 </TouchableOpacity>
               </View>
 
-              {activeSubscriptions.length > 0 ? (
-                <View style={styles.activeSubscriptions}>
-                  {activeSubscriptions.map((sub, index) => (
-                    <View key={sub.id} style={styles.subscriptionItem}>
-                      <View style={styles.subscriptionInfo}>
-                        <Text style={styles.subscriptionName}>{sub.name}</Text>
-                        <Text style={styles.subscriptionDate}>
-                          до {new Date(sub.endDate).toLocaleDateString('ru-RU')}
-                        </Text>
-                      </View>
-                      <Text style={styles.remainingLessons}>
-                        {typeof sub.lessonsCount === 'object' 
-                          ? `${sub.lessonsCount.group - (sub.usedLessons?.group || 0)} групп. + ${sub.lessonsCount.individual - (sub.usedLessons?.individual || 0)} инд.`
-                          : `${sub.lessonsCount - (sub.usedLessons || 0)} занятий`
-                        }
-                      </Text>
-                    </View>
-                  ))}
-                </View>
-              ) : (
-                <Text style={styles.noSubscriptions}>Нет активных абонементов</Text>
-              )}
+              {/*{activeSubscriptions.length > 0 ? (*/}
+              {/*  <View style={styles.activeSubscriptions}>*/}
+              {/*    {activeSubscriptions.map((sub, index) => (*/}
+              {/*      <View key={sub.id} style={styles.subscriptionItem}>*/}
+              {/*        <View style={styles.subscriptionInfo}>*/}
+              {/*          <Text style={styles.subscriptionName}>{sub.name}</Text>*/}
+              {/*          <Text style={styles.subscriptionDate}>*/}
+              {/*            до {new Date(sub.endDate).toLocaleDateString('ru-RU')}*/}
+              {/*          </Text>*/}
+              {/*        </View>*/}
+              {/*        <Text style={styles.remainingLessons}>*/}
+              {/*          {typeof sub.lessonsCount === 'object' */}
+              {/*            ? `${sub.lessonsCount.group - (sub.usedLessons?.group || 0)} групп. + ${sub.lessonsCount.individual - (sub.usedLessons?.individual || 0)} инд.`*/}
+              {/*            : `${sub.lessonsCount - (sub.usedLessons || 0)} занятий`*/}
+              {/*          }*/}
+              {/*        </Text>*/}
+              {/*      </View>*/}
+              {/*    ))}*/}
+              {/*  </View>*/}
+              {/*) : (*/}
+              {/*  <Text style={styles.noSubscriptions}>Нет активных абонементов</Text>*/}
+              {/*)}*/}
             </View>
           )}
 
@@ -151,12 +134,12 @@ const Profile = () => {
           <View style={styles.descriptionContainer}>
             <TextInput
               style={styles.descriptionField}
-              value={description}
+              value={user.description}
               onChangeText={handleDescriptionChange}
               placeholder="Введите описание"
               multiline={true}
             />
-            <Text style={styles.charCount}>{description.length}/{MAX_DESCRIPTION_LENGTH}</Text>
+            <Text style={styles.charCount}>{user.description?.length}/{MAX_DESCRIPTION_LENGTH}</Text>
           </View>
 
           <View style={styles.saveButtonContainer}>
@@ -179,11 +162,6 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingTop: 20,
     backgroundColor: '#fff',
-  },
-  profileImage: {
-    height: 150,
-    width: 150,
-    borderRadius: 100,
   },
   userNameText: {
     fontSize: 18,
@@ -242,7 +220,6 @@ const styles = StyleSheet.create({
     textAlignVertical: 'top',
     fontSize: 16,
     fontFamily: "os-regular",
-
   },
   charCount: {
     position: 'absolute',
@@ -251,7 +228,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: 'gray',
     fontFamily: "os-light"
-
   },
   saveButtonContainer: {
     alignItems: "center",
@@ -332,8 +308,9 @@ const styles = StyleSheet.create({
   },
   editButton: {
     position: 'absolute',
-    top: 5,
-    right: 5,
+    flex: 1,
+    top: -10,
+    right: 20,
     padding: 8,
     backgroundColor: "#000",
     borderRadius: 50,
@@ -341,26 +318,19 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
-    elevation: 5,
-    zIndex: 2,
 },
   profileImageContainer: {
-    position: 'relative',
     width: 150,
     height: 150,
     marginBottom: 10,
+    borderRadius: 75,
+    overflow: 'hidden',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  switchRoleButton: {
-    position: 'absolute',
-    top: -10,
-    right: -130,
-    padding: 8,
-    backgroundColor: "#000",
-    borderRadius: 50,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
+  profileImage: {
+    height: "100%",
+    width: "100%"
   },
 });
 

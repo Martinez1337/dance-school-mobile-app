@@ -1,15 +1,23 @@
-import { View, Text, Modal, StyleSheet, ScrollView, TouchableOpacity, Button, TouchableWithoutFeedback } from 'react-native';
-import { Image } from 'expo-image';
-import { Checkbox } from 'expo-checkbox';
+import {
+  View,
+  Text,
+  Modal,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  Button,
+  TouchableWithoutFeedback
+} from 'react-native';
+import {Image} from 'expo-image';
+import {Checkbox} from 'expo-checkbox';
 
-const TeacherFilterModal = ({ 
-  visible, 
-  onClose, 
-  teachers, 
-  selectedTeachers, 
+const TeacherFilterModal = ({
+  visible,
+  onClose,
+  teachers,
+  selectedTeachers,
   onTeacherSelect,
-  onTeacherPress,
-  onReset 
+  onReset
 }) => {
   return (
     <Modal
@@ -27,10 +35,10 @@ const TeacherFilterModal = ({
                 {teachers.map(teacher => (
                   <View key={teacher.id} style={styles.teacherCard}>
                     <TouchableOpacity
-                      onPress={() => onTeacherPress(teacher.id)}
+                      onPress={() => onTeacherSelect(teacher.firstName + ' ' + teacher.lastName)}
                       style={styles.teacherCardContent}
                     >
-                      <Image source={{uri: teacher.photo}} style={styles.teacherImage} />
+                      <Image source={{uri: teacher.photo}} style={styles.teacherImage}/>
                       <Text style={styles.teacherName}>
                         {teacher.firstName} {teacher.lastName}
                       </Text>
@@ -42,15 +50,19 @@ const TeacherFilterModal = ({
                       <Checkbox
                         value={selectedTeachers.includes(teacher.firstName + ' ' + teacher.lastName)}
                         onValueChange={() => onTeacherSelect(teacher.firstName + ' ' + teacher.lastName)}
-                        color={selectedTeachers.includes(teacher.firstName + ' ' + teacher.lastName) ? '#d903e4' : undefined}
+                        color={
+                          selectedTeachers.includes(teacher.firstName + ' ' + teacher.lastName)
+                            ? '#d903e4'
+                            : undefined
+                        }
                       />
                     </TouchableOpacity>
                   </View>
                 ))}
               </ScrollView>
               <View style={styles.modalButtons}>
-                <Button title="Применить" onPress={onClose} color="#d903e4" />
-                <Button title="Сбросить" onPress={onReset} color="#666" />
+                <Button title="Применить" onPress={onClose} color="#d903e4"/>
+                <Button title="Сбросить" onPress={onReset} color="#666"/>
               </View>
             </View>
           </TouchableWithoutFeedback>
@@ -99,7 +111,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     marginBottom: 8,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
+    shadowOffset: {width: 0, height: 1},
     shadowOpacity: 0.2,
     shadowRadius: 2,
     elevation: 2,
@@ -132,6 +144,6 @@ const styles = StyleSheet.create({
     marginTop: 16,
     paddingHorizontal: 16,
   },
-}); 
+});
 
 export default TeacherFilterModal;

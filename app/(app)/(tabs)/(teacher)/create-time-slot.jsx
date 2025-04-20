@@ -1,22 +1,21 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity } from 'react-native';
-import { Stack, router } from 'expo-router';
+import React, {useState} from 'react';
+import {View, Text, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity} from 'react-native';
+import {Stack, router} from 'expo-router';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
-import { format } from 'date-fns';
-import { ru } from 'date-fns/locale';
-import { Ionicons } from '@expo/vector-icons';
+import {format} from 'date-fns';
+import {Ionicons} from '@expo/vector-icons';
 
-import { ConfirmationModal, SelectionModal } from '../../../../components';
+import {ConfirmationModal, SelectionModal} from '../../../../components';
 
 // Дни недели
 const weekDays = [
-  { id: '1', name: 'Понедельник' },
-  { id: '2', name: 'Вторник' },
-  { id: '3', name: 'Среда' },
-  { id: '4', name: 'Четверг' },
-  { id: '5', name: 'Пятница' },
-  { id: '6', name: 'Суббота' },
-  { id: '7', name: 'Воскресенье' },
+  {id: '1', name: 'Понедельник'},
+  {id: '2', name: 'Вторник'},
+  {id: '3', name: 'Среда'},
+  {id: '4', name: 'Четверг'},
+  {id: '5', name: 'Пятница'},
+  {id: '6', name: 'Суббота'},
+  {id: '7', name: 'Воскресенье'},
 ];
 
 const CreateTimeSlotScreen = () => {
@@ -30,17 +29,17 @@ const CreateTimeSlotScreen = () => {
   const [selectedWeekDay, setSelectedWeekDay] = useState(weekDays[0].id);
   const [startTime, setStartTime] = useState(defaultStartTime);
   const [endTime, setEndTime] = useState(defaultEndTime);
-  
+
   const [isStartTimePickerVisible, setStartTimePickerVisible] = useState(false);
   const [isEndTimePickerVisible, setEndTimePickerVisible] = useState(false);
   const [isWeekDayModalVisible, setIsWeekDayModalVisible] = useState(false);
-  
+
   const [confirmationVisible, setConfirmationVisible] = useState(false);
 
   const handleStartTimeConfirm = (time) => {
     setStartTime(time);
     setStartTimePickerVisible(false);
-    
+
     // Если выбранное время начала больше времени окончания, 
     // установим время окончания на 1 час позже времени начала
     if (time >= endTime) {
@@ -54,11 +53,11 @@ const CreateTimeSlotScreen = () => {
     setEndTime(time);
     setEndTimePickerVisible(false);
   };
-  
+
   const handleCreateTimeSlot = () => {
     setConfirmationVisible(true);
   };
-  
+
   const handleConfirm = () => {
     setConfirmationVisible(false);
     // В реальном приложении здесь будет логика создания временного слота
@@ -83,7 +82,7 @@ const CreateTimeSlotScreen = () => {
           headerTitle: 'Добавление свободного слота',
           headerLeft: () => (
             <TouchableOpacity onPress={() => router.back()}>
-              <Ionicons name="arrow-back" size={24} color="black" />
+              <Ionicons name="arrow-back" size={24} color="black"/>
             </TouchableOpacity>
           ),
         }}
@@ -92,29 +91,29 @@ const CreateTimeSlotScreen = () => {
       <ScrollView style={styles.content}>
         <View style={styles.section}>
           <Text style={styles.label}>День недели</Text>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.selectInput}
             onPress={() => setIsWeekDayModalVisible(true)}
           >
             <Text style={styles.selectText}>{getSelectedWeekDayName()}</Text>
-            <Ionicons name="chevron-down" size={20} color="#666" />
+            <Ionicons name="chevron-down" size={20} color="#666"/>
           </TouchableOpacity>
         </View>
 
         <View style={styles.section}>
           <Text style={styles.label}>Время начала</Text>
-          <TouchableOpacity 
-            style={styles.input} 
+          <TouchableOpacity
+            style={styles.input}
             onPress={() => setStartTimePickerVisible(true)}
           >
             <Text style={styles.timeText}>{format(startTime, 'HH:mm')}</Text>
           </TouchableOpacity>
         </View>
-        
+
         <View style={styles.section}>
           <Text style={styles.label}>Время окончания</Text>
-          <TouchableOpacity 
-            style={styles.input} 
+          <TouchableOpacity
+            style={styles.input}
             onPress={() => setEndTimePickerVisible(true)}
           >
             <Text style={styles.timeText}>{format(endTime, 'HH:mm')}</Text>

@@ -9,6 +9,7 @@ import GroupLessonCard from "./GroupLessonCard";
 import LessonListItem from "./LessonListItem";
 import SearchTagList from "./SearchTagList";
 import SlotCard from "./SlotCard";
+import SlotInfoModal from "./modals/SlotInfoModal";
 import SubscriptionCard from "./SubscriptionCard";
 import TeacherFilterModal from "./modals/TeacherFilterModal";
 import TeacherProfileModal from "./modals/TeacherProfileModal";
@@ -16,6 +17,7 @@ import ScrollIndicator from './ScrollIndicator';
 import LessonRequestCard from './LessonRequestCard';
 import SelectionModal from "./modals/SelectionModal";
 import StudentCard from './StudentCard';
+import TeacherCard from './TeacherCard';
 
 export {
   ConfirmationModal,
@@ -29,7 +31,9 @@ export {
   LessonListItem,
   SearchTagList,
   SlotCard,
+  SlotInfoModal,
   SubscriptionCard,
+  TeacherCard,
   TeacherFilterModal,
   TeacherProfileModal,
   ScrollIndicator,
