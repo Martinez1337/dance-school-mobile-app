@@ -1,64 +1,88 @@
-import React, {useEffect, useState} from 'react';
+import React, {useCallback, useEffect, useState} from 'react';
 import {View, Text, StyleSheet, SafeAreaView, TouchableOpacity} from 'react-native';
 import {FlashList} from "@shopify/flash-list";
 import {format, parseISO, isAfter} from 'date-fns';
 import {ru} from "date-fns/locale";
 import {Ionicons} from '@expo/vector-icons';
 import {router, Tabs} from 'expo-router';
+import {useSelector} from "react-redux";
 
-import {filterLessonsByDate} from "../../../util/sortData";
 import {CustomCalendar, LessonListItem} from "../../../components";
+import {apiRequest, handleApiError} from "../../../util/apiService";
 
-import lessons from '../../../scratch-data/lessons.json';
-import groups from '../../../scratch-data/groups.json';
-import users from '../../../scratch-data/users.json';
+const fetchLessons = async (role, date) => {
+  const dateFrom = parseISO(date)
+  const dateTo = new Date();
 
+  // Устанавливаем dateFrom на начало текущего месяца
+  dateFrom.setUTCDate(1);
+  dateFrom.setUTCHours(0, 0, 0, 0);
 
-// Обогащаем данные о группах информацией о записанных студентах
-const enhancedGroups = groups.map(group => {
-  const students = users
-    .filter(user => user.role === 'Student')
-    .slice(0, Math.floor(Math.random() * 10) + 1)
-    .map(user => user.id);
+  // Устанавливаем dateTo на конец текущего месяца
+  dateTo.setUTCMonth(dateTo.getUTCMonth() + 1);
+  dateTo.setUTCDate(0);
+  dateTo.setUTCHours(0, 0, 0, 0);
 
-  return {
-    ...group,
-    students: students
-  };
-});
-
-// Обогащаем данные о занятиях информацией о студентах
-const lessonsData = lessons.map(lesson => {
-  if (lesson.lessonType === 'Individual') {
-    const randomStudentIndex = Math.floor(Math.random() * users.filter(u => u.role === 'Student').length);
-    const studentId = users.filter(u => u.role === 'Student')[randomStudentIndex].id;
-
-    return {
-      ...lesson,
-      studentId: studentId
-    };
-  } else {
-    return lesson;
+  try {
+    return await apiRequest({
+      method: 'POST',
+      url: role === 'student'
+        ? '/lessons/search/student'
+        : '/lessons/search/teacher',
+      data: {
+        date_from: dateFrom.toISOString(),
+        date_to: dateTo.toISOString(),
+      }
+    })
+  } catch (error) {
+    handleApiError(error)
   }
-});
+};
 
 const TimeTableTab = () => {
+  const role = useSelector((state) => state.session.role);
   const [selectedDate, setSelectedDate] = useState(format(new Date(), 'yyyy-MM-dd'));
   const [markedDates, setMarkedDates] = useState({});
-  const [filteredLessons, setFilteredLessons] = useState({});
+  const [lessons, setLessons] = useState(null);
+  const [filteredLessons, setFilteredLessons] = useState(lessons);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   useEffect(() => {
-    const marks = {};
+    fetchLessons(role, selectedDate)
+      .then((result) => setLessons(result.lessons))
+  }, []);
 
-    lessonsData.forEach(lesson => {
-      const date = format(parseISO(lesson.startTime), 'yyyy-MM-dd', {locale: ru});
-      if (isAfter(parseISO(lesson.startTime), new Date())) {
-        marks[date] = {marked: true, dotColor: "#d903e4"};
-      }
-    });
+  useEffect(() => {
+    if (!lessons) {
+      return;
+    }
+
+    const marks = {};
+    if (lessons && lessons.length > 0) {
+      // Отмечаем будущие занятие маркерами
+      lessons.forEach(lesson => {
+        const date = format(parseISO(lesson.start_time), 'yyyy-MM-dd', {locale: ru});
+        if (isAfter(parseISO(lesson.start_time), new Date())) {
+          marks[date] = {marked: true, dotColor: "#d903e4"};
+        }
+      });
+
+      // Фильтруем занятия по выбранной дате
+      const filtered = lessons.filter(lesson =>
+        format(parseISO(lesson.start_time), 'yyyy-MM-dd') === selectedDate
+      );
+      setFilteredLessons(filtered);
+    }
+
+    // Убираем маркер с выбранной даты
+    marks[selectedDate] = {
+      ...marks[selectedDate],
+      selected: true,
+      marked: false,
+    };
 
     setMarkedDates(marks);
-  }, []);
+  }, [selectedDate, lessons]);
 
   const handleLessonPress = (lesson) => {
     router.push({
@@ -66,6 +90,22 @@ const TimeTableTab = () => {
       params: {id: lesson.id}
     });
   };
+
+  const onRefreshHandler = async () => {
+    setIsRefreshing(true);
+    const result = await fetchLessons(role, selectedDate);
+    setLessons(result.lessons)
+    setIsRefreshing(false);
+  }
+
+  const handleDayPress = useCallback((day) => {
+    setSelectedDate(day.dateString);
+  }, [])
+
+  const handleMonthChange = useCallback((month) => {
+    fetchLessons(role, month.dateString)
+      .then((result) => setLessons(result));
+  }, [])
 
   return (
     <SafeAreaView style={styles.container}>
@@ -80,38 +120,37 @@ const TimeTableTab = () => {
             >
               <Ionicons name="people-outline" size={24} color="black"/>
             </TouchableOpacity>
-          ),
-          headerRight: () => (
-            <View style={styles.headerRightContainer}>
-
-            </View>
           )
         }}
       />
 
       <CustomCalendar
-        selectedDate={selectedDate}
-        setSelectedDate={setSelectedDate}
+        onDayPress={handleDayPress}
+        onMonthChange={handleMonthChange}
         markedDates={markedDates}
       />
+
       <View style={styles.lessonContainer}>
-        {
-          lessonsData.length > 0 ? (
-            <FlashList
-              data={lessonsData}
-              keyExtractor={(item) => item.id || item.startTime}
-              estimatedItemSize={100}
-              renderItem={({item}) => (
-                <LessonListItem item={item} onPress={handleLessonPress}/>
-              )}
-              showsVerticalScrollIndicator={false}
+        <FlashList
+          data={filteredLessons}
+          keyExtractor={(item) => item.id}
+          estimatedItemSize={200}
+          refreshing={isRefreshing}
+          onRefresh={onRefreshHandler}
+          showsVerticalScrollIndicator={false}
+          renderItem={({item}) => (
+            <LessonListItem
+              item={item}
+              onPress={handleLessonPress}
             />
-          ) : (
+          )}
+          ListHeaderComponent={<View style={{height: 15}}/>}
+          ListEmptyComponent={() => (
             <Text style={styles.noLessonsText}>
-              {"Нет занятий на этот день"}
+              Нет занятий на этот день
             </Text>
-          )
-        }
+          )}
+        />
       </View>
     </SafeAreaView>
   );
@@ -128,7 +167,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     marginTop: 15,
     borderTopWidth: 1,
-    borderColor: "rgba(158, 150, 150, .5)",
+    borderColor: "rgba(158, 150, 150, .1)",
   },
   noLessonsText: {
     fontSize: 18,

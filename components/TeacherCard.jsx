@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity} from 'react-native';
+import {Image} from 'expo-image';
 
 const TeacherCard = ({ teacher, onPress }) => {
   return (
@@ -8,21 +9,23 @@ const TeacherCard = ({ teacher, onPress }) => {
         onPress={onPress}
     >
       <Image
-        source={{ uri: teacher.photo }}
         style={styles.teacherPhoto}
+        source={{ uri: teacher.photo }}
+        placeholder={require("../assets/images/user-profile-placeholder.jpg")}
+        contentFit={'cover'}
+        placeholderContentFit={"cover"}
       />
       <View style={styles.teacherInfo}>
         <Text style={styles.teacherName}>
-          {teacher.firstName} {teacher.lastName}
+          {teacher.user.last_name} {teacher.user.first_name} {teacher.user.middle_name}
         </Text>
-        {teacher.description && (
+        {teacher.user.description && (
           <Text style={styles.teacherDescription}>
-            {teacher.description}
+            {teacher.user.description}
           </Text>
         )}
       </View>
     </TouchableOpacity>
-    
   )
 }
 

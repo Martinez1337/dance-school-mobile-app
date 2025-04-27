@@ -1,44 +1,54 @@
-import React, {useState} from 'react';
-import {View, StyleSheet, SafeAreaView, TouchableOpacity, RefreshControl} from 'react-native';
+import React, {useCallback, useState} from 'react';
+import {View, StyleSheet, SafeAreaView, TouchableOpacity, RefreshControl, Text} from 'react-native';
 import {FlashList} from '@shopify/flash-list';
-import {Tabs, router} from 'expo-router';
+import {Tabs, router, useFocusEffect} from 'expo-router';
 import {Ionicons} from '@expo/vector-icons';
+import {useSelector} from "react-redux";
 
 import {LessonRequestCard, CreateActionModal} from '../../../../components';
-import users from '../../../../scratch-data/users.json';
+import {apiRequest, handleApiError} from "../../../../util/apiService";
 
-// Фильтруем пользователей с ролью Student
-const students = users.filter(user => user.role === 'Student');
-
-// Временные данные для демонстрации с реальными студентами
-const mockRequests = [
-  {
-    id: '1',
-    student: students[0],
-    startTime: '2024-03-20T14:00:00.000Z',
-    finishTime: '2024-03-20T15:00:00.000Z',
-    danceStyle: 'Бальные танцы',
-    status: 'pending',
-  },
-  {
-    id: '2',
-    student: students[1],
-    startTime: '2024-03-21T16:00:00.000Z',
-    finishTime: '2024-03-21T17:00:00.000Z',
-    danceStyle: 'Хип-хоп',
-    status: 'pending',
-  },
-];
+const fetchLessonRequests = async (id, setRequests) => {
+  try {
+    const response = await apiRequest({
+      method: 'POST',
+      url: '/lessons/search/teacher',
+      data: {
+        terminated: false,
+        is_confirmed: false,
+        is_group: false,
+      }
+    });
+    setRequests(response.lessons);
+  } catch (error) {
+    handleApiError(error);
+  }
+};
 
 const LessonRequestsScreen = () => {
-  const [requests] = useState(mockRequests);
+  const id = useSelector((state) => state.session.id);
+  const [requests, setRequests] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
   const [isCreateModalVisible, setIsCreateModalVisible] = useState(false);
+
+  useFocusEffect(
+    useCallback(() => {
+      fetchLessonRequests(id, setRequests);
+    }, [])
+  )
+
+  const onRefreshHandler = async () => {
+    setRefreshing(true);
+    await fetchLessonRequests(id, setRequests);
+    setRefreshing(false);
+  };
 
   const handleRequestPress = (request) => {
     router.push({
       pathname: '/(app)/(shared)/lesson-request/[id]',
-      params: {id: request.id}
+      params: {
+        request: JSON.stringify(request)
+      }
     });
   };
 
@@ -50,9 +60,6 @@ const LessonRequestsScreen = () => {
   const handleCreateTimeSlot = () => {
     setIsCreateModalVisible(false);
     router.push('/create-time-slot');
-  };
-
-  const onRefreshHandler = () => {
   };
 
   return (
@@ -83,6 +90,13 @@ const LessonRequestsScreen = () => {
           estimatedItemSize={120}
           contentContainerStyle={styles.listContent}
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefreshHandler}/>}
+          ListEmptyComponent={() => (
+            <View style={styles.emptyContainer}>
+              <Text style={styles.noRequestsText}>
+                Нет новых заявок
+              </Text>
+            </View>
+          )}
         />
       </View>
 
@@ -111,6 +125,17 @@ const styles = StyleSheet.create({
   createButton: {
     marginRight: 16,
   },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  noRequestsText: {
+    fontSize: 18,
+    textAlign: 'center',
+    marginTop: 20,
+    color: '#999',
+  },
 });
 
-export default LessonRequestsScreen; 
+export default LessonRequestsScreen;

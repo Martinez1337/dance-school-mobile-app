@@ -39,7 +39,11 @@ export default function MyGroupsScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <Stack.Screen options={{
-        headerTitle: "Мои группы"
+        headerTitle: "Мои группы",
+        headerTitleStyle: {
+          fontSize: 20,
+          fontFamily: 'os-regular',
+        },
       }}/>
 
       {userGroups.length > 0 ? (

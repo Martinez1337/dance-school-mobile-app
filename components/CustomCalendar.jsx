@@ -18,20 +18,22 @@ LocaleConfig.locales['ru'] = {
 
 LocaleConfig.defaultLocale = 'ru';
 
-const CustomCalendar = ({selectedDate, setSelectedDate, markedDates}) => {
+const CustomCalendar = ({markedDates, onDayPress, onMonthChange}) => {
   return (
     <Calendar
-      onMonthChange={() => {}} // todo Запрос на каждый месяц
-      onDayPress={(day) => setSelectedDate(day.dateString)}
-      markedDates={{
-        ...markedDates,
-        [selectedDate]: {selected: true, selectedColor: '#d903e4'},
-      }}
+      onMonthChange={(month) => onMonthChange(month)}
+      onDayPress={(day) => onDayPress(day)}
+      markedDates={markedDates}
       monthFormat={'MMMM yyyy'}
-      firstDay={1} // Понедельник - первый день недели
+      firstDay={1}
+      minDate={"1996-05-10"}
+      maxDate={"2030-05-30"}
+      enableSwipeMonths={true}
       theme={{
         todayTextColor: "#d903e4",
         arrowColor: "#d903e4",
+        selectedDayBackgroundColor: '#d903e4',
+        selectedDayTextColor: '#ffffff',
         textDayFontFamily: "os-regular",
         textMonthFontFamily: "os-bold",
         textDayHeaderFontFamily: "os-bold-it",

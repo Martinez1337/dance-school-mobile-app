@@ -2,15 +2,11 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
-const StudentCard = ({ student, onPress, onDelete, isTeacher }) => {
+const StudentCard = ({ student, onDelete, isTeacher }) => {
   const fullName = `${student.lastName} ${student.firstName} ${student.middleName || ''}`.trim();
 
   return (
-    <TouchableOpacity 
-      style={styles.card}
-      onPress={onPress}
-      activeOpacity={0.7}
-    >
+    <View style={styles.card}>
       <View style={styles.content}>
         <Image 
           source={{ uri: student.photo || 'https://via.placeholder.com/50' }}
@@ -29,7 +25,7 @@ const StudentCard = ({ student, onPress, onDelete, isTeacher }) => {
           </TouchableOpacity>
         )}
       </View>
-    </TouchableOpacity>
+    </View>
   );
 };
 

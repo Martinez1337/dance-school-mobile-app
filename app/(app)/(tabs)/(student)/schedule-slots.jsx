@@ -3,7 +3,7 @@ import {useEffect, useState} from 'react';
 import {format, isAfter, parseISO} from 'date-fns';
 import {ru} from 'date-fns/locale';
 import {FlashList} from '@shopify/flash-list';
-import {Stack} from 'expo-router';
+import {router, Stack} from 'expo-router';
 import {Ionicons} from '@expo/vector-icons';
 
 import {
@@ -126,6 +126,11 @@ export default function ScheduleSlots() {
     <SafeAreaView style={styles.container}>
       <Stack.Screen
         options={{
+          headerLeft: () => (
+            <TouchableOpacity onPress={() => router.back()}>
+              <Ionicons name="chevron-back" size={24} color="black" />
+            </TouchableOpacity>
+          ),
           headerRight: () => (
             <TouchableOpacity
               onPress={() => setFilterModalVisible(true)}

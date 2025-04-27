@@ -1,54 +1,82 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, Image, ScrollView } from 'react-native';
-import { Stack, useLocalSearchParams, router } from 'expo-router';
-import { format, parseISO } from 'date-fns';
-import { ru } from 'date-fns/locale';
-import { Ionicons } from '@expo/vector-icons';
+import React, {useEffect, useState} from 'react';
+import {View, Text, StyleSheet, SafeAreaView, TouchableOpacity, ScrollView} from 'react-native';
+import {Image} from 'expo-image';
+import {Stack, useLocalSearchParams, router} from 'expo-router';
+import {format, parseISO} from 'date-fns';
+import {ru} from 'date-fns/locale';
+import {Ionicons} from '@expo/vector-icons';
 
-import { ConfirmationModal, SelectionModal } from '../../../../components';
-import users from '../../../../scratch-data/users.json';
+import {ConfirmationModal, SelectionModal} from '../../../../components';
+import {apiRequest, handleApiError} from "../../../../util/apiService";
 
-const mockRequest = {
-  id: '1',
-  student: users.find(user => user.role === 'Student'),
-  startTime: '2024-03-20T14:00:00.000Z',
-  finishTime: '2024-03-20T15:00:00.000Z',
-  danceStyle: 'Бальные танцы',
-  status: 'pending',
+const fetchClassrooms = async (setClassroomList, startDate, endDate) => {
+  try {
+    const response = await apiRequest({
+      method: 'POST',
+      url: '/classrooms/search/available',
+      data: {
+        date_from: startDate.toISOString(),
+        date_to: endDate.toISOString(),
+      },
+    })
+    setClassroomList(response);
+  } catch (error) {
+    handleApiError(error)
+  }
 };
 
-const halls = [
-  { id: '1', name: 'Зал 1', available: true },
-  { id: '2', name: 'Зал 2', available: true },
-  { id: '3', name: 'Зал 3', available: false },
-];
-
 const LessonRequestScreen = () => {
-  const { id } = useLocalSearchParams();
-  const [selectedHall, setSelectedHall] = useState(null);
-  const [allowNeighbors, setAllowNeighbors] = useState(false);
+  const params = useLocalSearchParams();
+  const requestData = JSON.parse(params.request);
+  const student = requestData.actual_students[0];
+
+  // const [allowNeighbors, setAllowNeighbors] = useState(false);
   const [confirmationVisible, setConfirmationVisible] = useState(false);
   const [actionType, setActionType] = useState(null);
-  const [isHallModalVisible, setIsHallModalVisible] = useState(false);
+  const [isClassroomModalVisible, setIsClassroomModalVisible] = useState(false);
+  const [classroomList, setClassroomList] = useState([]);
+  const [selectedClassroom, setSelectedClassroom] = useState(null);
 
-  const availableHalls = halls.filter(hall => hall.available);
+  useEffect(() => {
+    fetchClassrooms(
+      setClassroomList,
+      new Date(parseISO(requestData.start_time)),
+      new Date(parseISO(requestData.finish_time))
+    )
+  }, []);
 
   const handleAction = (type) => {
     setActionType(type);
     setConfirmationVisible(true);
   };
 
-  const handleConfirm = () => {
+  const handleConfirm = async () => {
     setConfirmationVisible(false);
-    if (actionType === 'accept' && !selectedHall) {
+    if (actionType === 'accept' && !selectedClassroom) {
       return;
     }
+
+    try {
+      await apiRequest({
+        method: 'PATCH',
+        url: `/lessons/request/${requestData.id}`,
+        data: actionType === 'accept' ? {
+          is_confirmed: true,
+          classroom_id: selectedClassroom
+        } : {
+          is_confirmed: false,
+        }
+      })
+    } catch (error) {
+      handleApiError(error);
+    }
+
     router.back();
   };
 
   const getSelectedHallName = () => {
-    const hall = halls.find(h => h.id === selectedHall);
-    return hall ? hall.name : 'Выберите зал';
+    const classroom = classroomList.find(c => c.id === selectedClassroom);
+    return classroom ? classroom.name : 'Выберите зал';
   };
 
   return (
@@ -62,35 +90,38 @@ const LessonRequestScreen = () => {
       <ScrollView style={styles.content}>
         <View style={styles.studentInfo}>
           <Image
-            source={{ uri: mockRequest.student.photo }}
+            source={{uri: student.photo}}
             style={styles.studentPhoto}
+            placeholder={require("../../../../assets/images/user-profile-placeholder.jpg")}
+            contentFit={'cover'}
+            placeholderContentFit={"cover"}
           />
           <View style={styles.studentDetails}>
             <Text style={styles.studentName}>
-              {mockRequest.student.lastName} {mockRequest.student.firstName} {mockRequest.student.middleName}
+              {student.user.last_name} {student.user.first_name} {student.user.middle_name}
             </Text>
             <Text style={styles.studentLevel}>
-              Уровень: {mockRequest.student.level}
+              Уровень: {student.level.name}
             </Text>
             <Text style={styles.contactInfo}>
-              {mockRequest.student.phoneNumber}
+              {student.user.phone_number}
             </Text>
             <Text style={styles.contactInfo}>
-              {mockRequest.student.email}
+              {student.user.email}
             </Text>
           </View>
         </View>
 
         <View style={styles.lessonInfo}>
           <View style={styles.infoRow}>
-            <Ionicons name="musical-notes-outline" size={24} color="#666" />
-            <Text style={styles.infoText}>{mockRequest.danceStyle}</Text>
+            <Ionicons name="pricetag-outline" size={24} color="#666"/>
+            <Text style={styles.infoText}>{requestData.lesson_type.dance_style.name}</Text>
           </View>
           <View style={styles.infoRow}>
-            <Ionicons name="calendar-outline" size={24} color="#666" />
+            <Ionicons name="calendar-outline" size={24} color="#666"/>
             <Text style={styles.infoText}>
-              {format(parseISO(mockRequest.startTime), 'd MMMM, HH:mm', { locale: ru })} -
-              {format(parseISO(mockRequest.finishTime), ' HH:mm', { locale: ru })}
+              {format(parseISO(requestData.start_time), 'd MMMM, HH:mm', {locale: ru})} -
+              {format(parseISO(requestData.finish_time), ' HH:mm', {locale: ru})}
             </Text>
           </View>
         </View>
@@ -99,24 +130,24 @@ const LessonRequestScreen = () => {
         <View style={styles.section}>
           <TouchableOpacity
             style={styles.selectInput}
-            onPress={() => setIsHallModalVisible(true)}
+            onPress={() => setIsClassroomModalVisible(true)}
           >
             <Text style={styles.selectText}>{getSelectedHallName()}</Text>
-            <Ionicons name="chevron-down" size={20} color="#666" />
+            <Ionicons name="chevron-down" size={20} color="#666"/>
           </TouchableOpacity>
         </View>
 
-        <TouchableOpacity
-          style={styles.neighborsToggle}
-          onPress={() => setAllowNeighbors(!allowNeighbors)}
-        >
-          <View style={[styles.checkbox, allowNeighbors && styles.checkboxChecked]}>
-            {allowNeighbors && <Ionicons name="checkmark" size={16} color="#fff" />}
-          </View>
-          <Text style={styles.neighborsText}>
-            Согласен на присутствие других учеников в зале
-          </Text>
-        </TouchableOpacity>
+      {/*  <TouchableOpacity*/}
+      {/*    style={styles.neighborsToggle}*/}
+      {/*    onPress={() => setAllowNeighbors(!allowNeighbors)}*/}
+      {/*  >*/}
+      {/*    <View style={[styles.checkbox, allowNeighbors && styles.checkboxChecked]}>*/}
+      {/*      {allowNeighbors && <Ionicons name="checkmark" size={16} color="#fff"/>}*/}
+      {/*    </View>*/}
+      {/*    <Text style={styles.neighborsText}>*/}
+      {/*      Согласен на присутствие других учеников в зале*/}
+      {/*    </Text>*/}
+      {/*  </TouchableOpacity>*/}
       </ScrollView>
 
       <View style={styles.footer}>
@@ -131,10 +162,10 @@ const LessonRequestScreen = () => {
           style={[
             styles.button,
             styles.acceptButton,
-            (!selectedHall || !allowNeighbors) && styles.buttonDisabled
+            (!selectedClassroom) && styles.buttonDisabled
           ]}
           onPress={() => handleAction('accept')}
-          disabled={!selectedHall || !allowNeighbors}
+          disabled={!selectedClassroom}
         >
           <Text style={styles.buttonText}>Принять</Text>
         </TouchableOpacity>
@@ -150,15 +181,16 @@ const LessonRequestScreen = () => {
           : 'Вы уверены, что хотите отклонить эту заявку?'
         }
         confirmText={actionType === 'accept' ? 'Принять' : 'Отклонить'}
+        cancelText={'Отмена'}
       />
 
       <SelectionModal
-        visible={isHallModalVisible}
-        onClose={() => setIsHallModalVisible(false)}
-        onSelect={setSelectedHall}
+        visible={isClassroomModalVisible}
+        onClose={() => setIsClassroomModalVisible(false)}
+        onSelect={setSelectedClassroom}
         title="Выберите зал"
-        items={availableHalls}
-        selectedValue={selectedHall}
+        items={classroomList}
+        selectedValue={selectedClassroom}
         labelExtractor={(item) => item.name}
         valueExtractor={(item) => item.id}
       />
@@ -301,4 +333,3 @@ const styles = StyleSheet.create({
 });
 
 export default LessonRequestScreen;
-

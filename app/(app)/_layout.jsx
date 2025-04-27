@@ -2,7 +2,6 @@ import {useState, useEffect} from 'react';
 import {Redirect, Stack} from "expo-router";
 import {useSelector} from "react-redux";
 
-
 export default function AppLayout() {
   const isUserLoaded = useSelector(state => state.session.isLoaded);
   const [loaded, setLoaded] = useState(isUserLoaded);

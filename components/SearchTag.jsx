@@ -5,10 +5,10 @@ const SearchTag = ({tag, updateTagsState}) => {
   return (
     <TouchableOpacity
       onPress={() => updateTagsState(tag.id, !tag.value)}
-      style={{opacity: tag.value ? 1 : 0.5}}
+      style={{opacity: tag.value ? 1 : 0.33}}
     >
       <View style={[styles.tagContainer, {backgroundColor: tag.color}]}>
-        <Text style={styles.tagText}>{tag.title}</Text>
+        <Text style={styles.tagText}>{tag.name}</Text>
       </View>
     </TouchableOpacity>
   )

@@ -2,12 +2,12 @@ import {useEffect, useState, useMemo} from "react";
 import {SafeAreaView, Text, StyleSheet, View, TouchableOpacity} from 'react-native';
 import {format, isAfter, parseISO} from "date-fns";
 import {ru} from "date-fns/locale";
-import {useRouter, useLocalSearchParams} from 'expo-router';
+import {useRouter, useLocalSearchParams, router} from 'expo-router';
 import {Stack} from 'expo-router';
 import {Ionicons} from '@expo/vector-icons';
 import {FlashList} from '@shopify/flash-list';
 
-import {CustomCalendar, GroupLessonCard, GroupFilterModal} from '../../../../components';
+import {CustomCalendar, LessonListItem, GroupFilterModal} from '../../../../components';
 
 import lessons from '../../../../scratch-data/lessons.json';
 import groups from '../../../../scratch-data/groups.json';
@@ -213,6 +213,11 @@ export default function ScheduleGroups() {
     <SafeAreaView style={styles.container}>
       <Stack.Screen
         options={{
+          headerLeft: () => (
+            <TouchableOpacity onPress={() => router.back()}>
+              <Ionicons name="chevron-back" size={24} color="black" />
+            </TouchableOpacity>
+          ),
           headerRight: () => (
             <TouchableOpacity
               onPress={() => setFilterModalVisible(true)}
@@ -239,23 +244,27 @@ export default function ScheduleGroups() {
         markedDates={markedDates}
       />
 
-      <FlashList
-        data={filteredLessons}
-        renderItem={({item}) => (
-          <GroupLessonCard
-            item={item}
-            onPress={handleLessonPress}
+      <View style={styles.lessonContainer}>
+        {
+          <FlashList
+            data={filteredLessons}
+            keyExtractor={(item) => item.id.toString()}
+            estimatedItemSize={200}
+            renderItem={({item}) => (
+              <LessonListItem
+                item={item}
+                onPress={handleLessonPress}
+              />
+            )}
+            ListHeaderComponent={<View style={{height: 15}}/>}
+            ListEmptyComponent={() => (
+              <Text style={styles.noLessonsText}>
+                В этот день нет подходящих групповых занятий
+              </Text>
+            )}
           />
-        )}
-        keyExtractor={(item) => item.id.toString()}
-        estimatedItemSize={200}
-        ListHeaderComponent={<View style={{height: 15}}/>}
-        ListEmptyComponent={() => (
-          <Text style={styles.noLessonsText}>
-            В этот день нет подходящих групповых занятий
-          </Text>
-        )}
-      />
+        }
+      </View>
 
       <GroupFilterModal
         visible={filterModalVisible}
@@ -273,6 +282,13 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#fff',
     padding: 16,
+  },
+  lessonContainer: {
+    flex: 1,
+    paddingHorizontal: 20,
+    marginTop: 15,
+    borderTopWidth: 1,
+    borderColor: "rgba(158, 150, 150, .1)",
   },
   noLessonsText: {
     flex: 1,

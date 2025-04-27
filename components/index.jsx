@@ -5,8 +5,8 @@ import DanceListItem from "./DanceListItem";
 import EventListItem from "./EventListItem";
 import { FormField } from './FormField';
 import GroupFilterModal from "./modals/GroupFilterModal";
-import GroupLessonCard from "./GroupLessonCard";
 import LessonListItem from "./LessonListItem";
+import RequestCard from "./RequestCard";
 import SearchTagList from "./SearchTagList";
 import SlotCard from "./SlotCard";
 import SlotInfoModal from "./modals/SlotInfoModal";
@@ -27,17 +27,17 @@ export {
   EventListItem,
   FormField,
   GroupFilterModal,
-  GroupLessonCard,
   LessonListItem,
+  LessonRequestCard,
+  RequestCard,
   SearchTagList,
+  SelectionModal,
   SlotCard,
   SlotInfoModal,
   SubscriptionCard,
+  StudentCard,
   TeacherCard,
   TeacherFilterModal,
   TeacherProfileModal,
   ScrollIndicator,
-  LessonRequestCard,
-  SelectionModal,
-  StudentCard,
 }

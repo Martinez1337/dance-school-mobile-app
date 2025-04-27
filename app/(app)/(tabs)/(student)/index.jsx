@@ -1,7 +1,7 @@
 import {useState, useMemo} from 'react';
 import {View, Text, StyleSheet, TouchableOpacity, Modal, SafeAreaView, TextInput} from 'react-native';
 import {FlashList} from "@shopify/flash-list";
-import {useRouter} from 'expo-router';
+import {useRouter, Stack} from 'expo-router';
 import {Ionicons} from '@expo/vector-icons';
 
 import {DanceListItem} from '../../../../components';
@@ -89,9 +89,24 @@ export default function StudentDashboard() {
       router.push('schedule-groups');
     }
   };
+  
+  const navigateToMyRequests = () => {
+    router.push('/(app)/(tabs)/(student)/my-requests');
+  };
 
   return (
     <SafeAreaView style={styles.container}>
+      <Stack.Screen 
+        options={{
+          headerShown: true,
+          headerRight: () => (
+            <TouchableOpacity onPress={navigateToMyRequests} style={styles.headerButton}>
+              <Ionicons name="document-text-outline" size={24} color="#333" />
+            </TouchableOpacity>
+          ),
+        }}
+      />
+      
       <Text style={styles.title}>Выберите стиль танца</Text>
 
       {/* Поисковая строка в стиле экрана events */}
@@ -246,5 +261,9 @@ const styles = StyleSheet.create({
     height: 1,
     backgroundColor: '#e1e1e1',
     marginHorizontal: 10,
+  },
+  headerButton: {
+    marginRight: 15,
+    padding: 5,
   },
 });

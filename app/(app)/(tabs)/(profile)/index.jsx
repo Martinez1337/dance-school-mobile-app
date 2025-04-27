@@ -61,7 +61,7 @@ const Profile = () => {
             <Image
               style={styles.profileImage}
               source={user.photo}
-              placeholder={require("../../../../assets/images/user-profile.png")}
+              placeholder={require("../../../../assets/images/user-profile-placeholder.jpg")}
               contentFit={'cover'}
               placeholderContentFit={"cover"}
             />
@@ -320,10 +320,9 @@ const styles = StyleSheet.create({
     shadowRadius: 3.84,
 },
   profileImageContainer: {
-    width: 150,
-    height: 150,
-    marginBottom: 10,
-    borderRadius: 75,
+    width: 200,
+    height: 200,
+    borderRadius: 100,
     overflow: 'hidden',
     alignItems: 'center',
     justifyContent: 'center',

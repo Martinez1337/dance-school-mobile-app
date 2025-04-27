@@ -50,28 +50,24 @@ const EditProfileScreen = () => {
   }
 
   const handleSaveProfile = (values) => {
-    Alert.alert(
-      'Подтверждение',
-      'Вы уверены, что хотите сохранить изменения в профиле?',
-      [
-        {text: 'Отмена', style: 'cancel'},
+    Alert.alert('Подтверждение', 'Вы уверены, что хотите сохранить изменения в профиле?',
+      [{text: 'Отмена', style: 'cancel'},
         {
           text: 'Сохранить',
           onPress: async () => {
-            const requestBody = {
-              first_name: values.first_name,
-              last_name: values.last_name,
-              middle_name: values.middle_name,
-              description: values.description,
-              ...(values.email !== user.email && {email: values.email}),
-              ...(values.phone_number !== user.phone_number && {phone_number: values.phone_number}),
-              ...(role === 'student' && {level_id: selectedLevel})
-            }
             try {
               const patchResponse = await apiRequest({
                 method: 'PATCH',
                 url: role === 'student' ? `/students/${id}` : `/teachers/${id}`,
-                data: requestBody,
+                data: {
+                  first_name: values.first_name,
+                  last_name: values.last_name,
+                  middle_name: values.middle_name,
+                  description: values.description,
+                  ...(values.email !== user.email && {email: values.email}),
+                  ...(values.phone_number !== user.phone_number && {phone_number: values.phone_number}),
+                  ...(role === 'student' && {level_id: selectedLevel})
+                },
               });
               console.log(`patchResponse: ${JSON.stringify(patchResponse)}`);
               dispatch(updateUserField(patchResponse.user))
@@ -81,7 +77,7 @@ const EditProfileScreen = () => {
             } catch (error) {
               console.log(error)
             }
-            // router.back();
+            router.back();
           },
         },
       ]

@@ -1,6 +1,7 @@
 import axios from 'axios';
 import Constants from 'expo-constants'
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import {Alert} from "react-native";
 
 // Создаем экземпляр axios с настройками по умолчанию
 const apiClient = axios.create({
@@ -50,38 +51,34 @@ const apiRequest = async ({
   } catch (error) {
     if (error.response) {
       const status = error.response.status;
-      const message = error.response.data?.message || 'Ошибка сервера';
-      throw new Error(`Ошибка ${status}: ${message}`);
+      const message = error.response.data?.detail || 'Ошибка сервера';
+      throw new Error(`Ошибка ${status}: ${message}`, {cause: error});
     } else if (error.request) {
-      throw new Error('Нет соединения с сервером. Проверьте интернет.');
+      throw new Error('Нет соединения с сервером. Проверьте интернет соединение.', {cause: error});
     } else {
-      throw new Error(error.message || 'Произошла ошибка при выполнении запроса.');
+      throw new Error(error.message || 'Произошла ошибка при выполнении запроса.', {cause: error});
     }
   }
 };
 
 // Функция для выполнения запроса авторизации
 const login = async (credentials) => {
-  try {
-    const response = await apiRequest({
-      method: 'post',
-      url: '/auth/token',
-      data: credentials,
-      requiresAuth: false,
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-    });
+  const response = await apiRequest({
+    method: 'post',
+    url: '/auth/token',
+    data: credentials,
+    requiresAuth: false,
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+  });
 
-    // Сохраняем токен в AsyncStorage
-    if (response.access_token) {
-      await AsyncStorage.setItem('accessToken', response.access_token);
-    }
-
-    return response;
-  } catch (error) {
-    throw error;
+  // Сохраняем токен в AsyncStorage
+  if (response.access_token) {
+    await AsyncStorage.setItem('accessToken', response.access_token);
   }
+
+  return response;
 };
 
 // Функция для выхода из системы
@@ -89,4 +86,15 @@ const logout = async () => {
   await AsyncStorage.removeItem('authToken');
 };
 
-export { apiRequest, login, logout };
+// Функция показа сообщения об ошибке
+const handleApiError = (error) => {
+  console.log("Ошибка: ", error);
+  Alert.alert('Ошибка', error.message, [{ text: 'OK' }]);
+};
+
+export {
+  apiRequest,
+  login,
+  logout,
+  handleApiError
+};

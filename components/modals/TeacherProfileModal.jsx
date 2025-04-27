@@ -27,11 +27,14 @@ const TeacherProfileModal = ({ visible, onClose, teacher }) => {
               <ScrollView style={styles.profileScrollView}>
                 <View style={styles.header}>
                   <Image
-                    source={{ uri: teacher.photo }}
+                    source={{ uri: teacher.user.photo }}
                     style={styles.profileImage}
+                    placeholder={require("../../assets/images/user-profile-placeholder.jpg")}
+                    contentFit={'cover'}
+                    placeholderContentFit={"cover"}
                   />
                   <Text style={styles.name}>
-                    {teacher.firstName} {teacher.lastName}
+                    {teacher.user.last_name} {teacher.user.first_name} {teacher.user.middle_name}
                   </Text>
                   <Text style={styles.role}>Преподаватель</Text>
                 </View>
@@ -40,12 +43,12 @@ const TeacherProfileModal = ({ visible, onClose, teacher }) => {
                   <Text style={styles.sectionTitle}>Информация</Text>
                   <View style={styles.infoItem}>
                     <Ionicons name="mail-outline" size={20} color="#666" />
-                    <Text style={styles.infoText}>{teacher.email}</Text>
+                    <Text style={styles.infoText}>{teacher.user.email}</Text>
                   </View>
                   <View style={styles.infoItem}>
                     <Ionicons name="call-outline" size={20} color="#666" />
                     <Text style={styles.infoText}>
-                      {teacher.phoneNumber || 'Не указан'}
+                      {teacher.user.phone_number || 'Не указан'}
                     </Text>
                   </View>
                 </View>
@@ -53,9 +56,9 @@ const TeacherProfileModal = ({ visible, onClose, teacher }) => {
                 <View style={styles.infoSection}>
                   <Text style={styles.sectionTitle}>Стили танцев</Text>
                   <View style={styles.tagContainer}>
-                    {teacher.danceStyles?.map((style, index) => (
-                      <View key={index} style={styles.tag}>
-                        <Text style={styles.tagText}>{style}</Text>
+                    {teacher.lesson_types?.map((type) => (
+                      <View key={type.id} style={styles.tag}>
+                        <Text style={styles.tagText}>{type.dance_style.name}</Text>
                       </View>
                     ))}
                   </View>
@@ -64,7 +67,7 @@ const TeacherProfileModal = ({ visible, onClose, teacher }) => {
                 <View style={styles.infoSection}>
                   <Text style={styles.sectionTitle}>О преподавателе</Text>
                   <Text style={styles.description}>
-                    {teacher.description || 'Информация отсутствует'}
+                    {teacher.user.description || 'Информация отсутствует'}
                   </Text>
                 </View>
               </ScrollView>

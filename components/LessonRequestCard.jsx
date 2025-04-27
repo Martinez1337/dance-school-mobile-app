@@ -4,26 +4,27 @@ import { format, parseISO } from 'date-fns';
 import { ru } from 'date-fns/locale';
 
 const LessonRequestCard = ({ request, onPress }) => {
+  const student = request.actual_students[0]
   return (
     <TouchableOpacity style={styles.container} onPress={() => onPress(request)}>
       <View style={styles.header}>
         <Text style={styles.name}>
-          {request.student.lastName} {request.student.firstName} {request.student.middleName}
+          {student.user.last_name} {student.user.first_name} {student.user.middle_name}
         </Text>
         <Text style={styles.date}>
-          {format(parseISO(request.startTime), 'd MMMM', { locale: ru })}
+          {format(parseISO(request.start_time), 'd MMMM', { locale: ru })}
         </Text>
       </View>
       
       <View style={styles.timeContainer}>
         <Text style={styles.time}>
-          {format(parseISO(request.startTime), 'HH:mm')} - {format(parseISO(request.finishTime), 'HH:mm')}
+          {format(parseISO(request.start_time), 'HH:mm')} - {format(parseISO(request.finish_time), 'HH:mm')}
         </Text>
       </View>
 
       <View style={styles.footer}>
-        <Text style={styles.danceStyle}>{request.danceStyle}</Text>
-        <Text style={styles.level}>{request.student.level}</Text>
+        <Text style={styles.danceStyle}>{request.lesson_type.dance_style.name}</Text>
+        <Text style={styles.level}>{student.level.name}</Text>
       </View>
     </TouchableOpacity>
   );

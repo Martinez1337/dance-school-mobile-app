@@ -7,7 +7,7 @@ import SearchTag from "../components/SearchTag"
 const SearchTagList = ({searchTags, setSearchTags}) => {
   const updateProfileTagsState = (id, newValue) => {
     const updatedTagStates = searchTags.map(tag =>
-      tag.id === id ? {...tag, value: newValue} : {...tag, value: false}
+      tag.id === id ? {...tag, value: newValue} : tag
     );
     setSearchTags(updatedTagStates);
   };
@@ -16,7 +16,7 @@ const SearchTagList = ({searchTags, setSearchTags}) => {
     <View>
       <FlashList
         data={searchTags}
-        keyExtractor={item => item.id.toString()}
+        keyExtractor={item => item.id}
         renderItem={({item}) =>
           <SearchTag tag={item} updateTagsState={updateProfileTagsState}/>
         }

@@ -7,7 +7,7 @@ import {useDispatch} from "react-redux";
 import {authorizationValidationSchema} from "../../validation/validation";
 import {FormField} from "../../components";
 import {globalStyles} from "../../styles/globalStyles";
-import {apiRequest, login} from '../../util/apiService';
+import {apiRequest, handleApiError, login} from '../../util/apiService';
 import {setSession} from "../../redux/slices/sessionSlice";
 import {setUser} from "../../redux/slices/userSlice";
 import {setLevel} from "../../redux/slices/levelSlice";
@@ -28,25 +28,23 @@ const onSignInHandler = async (values, dispatch) => {
   }
 
   //todo Написать обработку ошибок
-  const authResponse = await login(requestBody)
-    .catch(error => console.log(error))
+  try {
+    const authResponse = await login(requestBody)
+    console.log(`authResponse: ${JSON.stringify(authResponse)}`);
+    const meResponse = await apiRequest({
+      method: 'GET',
+      url: '/auth/me'
+    })
+    console.log(`meResponse: ${JSON.stringify(meResponse)}`);
 
-  console.log(`authResponse: ${JSON.stringify(authResponse)}`);
+    dispatch(setSession(meResponse))
+    dispatch(setUser(meResponse.user))
+    if (meResponse.level) {
+      dispatch(setLevel(meResponse.level))
+    }
 
-  const meResponse = await apiRequest({
-    method: 'GET',
-    url: '/auth/me'
-  }).catch(error => console.log(error))
-
-  console.log(`meResponse: ${JSON.stringify(meResponse)}`);
-
-  dispatch(setSession(meResponse))
-  dispatch(setUser(meResponse.user))
-  if (meResponse.level) {
-    dispatch(setLevel(meResponse.level))
-  }
-
-  router.replace("/(tabs)/(profile)");
+    router.replace("/(tabs)/(profile)");
+  } catch (error) {handleApiError(error)}
 }
 
 const Index = () => {

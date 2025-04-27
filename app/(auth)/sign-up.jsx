@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import {SafeAreaView, Text, TouchableOpacity, View, StyleSheet } from 'react-native'
+import {SafeAreaView, Text, TouchableOpacity, View, StyleSheet, Alert} from 'react-native'
 import {KeyboardAwareScrollView} from "react-native-keyboard-aware-scroll-view";
 import {Formik} from "formik";
 
@@ -8,32 +8,55 @@ import {FormField} from "../../components";
 import { Ionicons } from '@expo/vector-icons';
 import SelectionModal from '../../components/modals/SelectionModal';
 import {registrationValidationSchema} from "../../validation/validation";
-import { apiRequest } from '../../util/apiService';
+import {apiRequest, handleApiError} from '../../util/apiService';
+import {router} from "expo-router";
 
 const isFormValid = (isValid, touched) => {
   return isValid && Object.keys(touched).length !== 0;
 }
 
 const onSubmitHandler = async (values) => {
-  console.log(`onSubmitHandler: ${JSON.stringify(values)}`);
-  const requestBody = {
-    first_name: values.firstName,
-    last_name: values.lastName,
-    middle_name: values.middleName,
-    email: values.email,
-    phone_number: values.phoneNumber,
-    description: values.description,
-    level_id: values.level,
-    password: values.password,
+  try {
+    const requestBody = {
+      first_name: values.firstName,
+      last_name: values.lastName,
+      middle_name: values.middleName,
+      email: values.email,
+      phone_number: values.phoneNumber,
+      description: values.description,
+      level_id: values.level,
+      password: values.password,
+    }
+    const response = await apiRequest({
+      method: 'POST',
+      url: '/auth/register',
+      data: requestBody,
+      requiresAuth: false,
+    });
+    Alert.alert("Регистрация", "Вы успешно зарегистрировались!", [{text: "OK"}]);
+    console.log(`register response: ${JSON.stringify(response)}`);
+    router.back()
+  } catch (error) {
+    handleApiError(error)
   }
-  const response = await apiRequest({
-    method: 'POST',
-    url: '/auth/register',
-    data: requestBody,
-    requiresAuth: false,
-  });
-  console.log(`register response: ${JSON.stringify(response)}`);
 }
+
+const fetchLevels = async (setLevels, setSelectedLevel) => {
+  try {
+    const response = await apiRequest({
+      method: 'GET',
+      url: '/levels',
+      requiresAuth: false,
+    }).catch(error => {
+      console.log(error);
+    });
+    console.log(`fetched levels: ${JSON.stringify(response)}`);
+    setLevels(response);
+    setSelectedLevel(response[0].id);
+  } catch (error) {
+    handleApiError(error)
+  }
+};
 
 const SignUp = () => {
   const [isLevelModalVisible, setIsLevelModalVisible] = useState(false);
@@ -41,21 +64,7 @@ const SignUp = () => {
   const [levels, setLevels] = useState([]);
 
   useEffect(() => {
-    console.log('HERE')
-    const fetchLevels = async () => {
-      const response = await apiRequest({
-        method: 'GET',
-        url: '/levels',
-        requiresAuth: false,
-      }).catch(error => {
-        console.log(error);
-      });
-      console.log(`fetched levels: ${JSON.stringify(response)}`);
-      setLevels(response);
-      setSelectedLevel(response[0].id);
-      console.log(`selectedLevel: ${selectedLevel}`);
-    };
-    fetchLevels();
+    fetchLevels(setLevels, setSelectedLevel);
   }, []);
 
   const getSelectedLevelName = () => {

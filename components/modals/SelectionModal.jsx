@@ -76,7 +76,7 @@ const SelectionModal = ({
           )}
         </View>
         
-        {filteredItems.length === 0 ? (
+        {filteredItems?.length === 0 ? (
           <View style={styles.emptyContainer}>
             <Text style={styles.emptyText}>Ничего не найдено</Text>
           </View>

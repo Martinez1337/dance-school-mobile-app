@@ -31,7 +31,7 @@ const CreateActionModal = ({ visible, onClose, onCreateIndividual, onCreateTimeS
             onPress={onCreateTimeSlot}
           >
             <Ionicons name="time-outline" size={24} color="#d903e4" />
-            <Text style={styles.optionText}>Добавить свободный слот</Text>
+            <Text style={styles.optionText}>Создать свободный слот</Text>
           </TouchableOpacity>
         </View>
       </TouchableOpacity>

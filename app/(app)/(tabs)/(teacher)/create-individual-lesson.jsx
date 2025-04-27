@@ -1,5 +1,5 @@
 import React, {useState, useEffect} from 'react';
-import {View, Text, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity, TextInput} from 'react-native';
+import {View, Text, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity, TextInput, Alert} from 'react-native';
 import {Stack, router} from 'expo-router';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
 import {format} from 'date-fns';
@@ -7,32 +7,56 @@ import {ru} from 'date-fns/locale';
 import {Ionicons} from '@expo/vector-icons';
 
 import {ConfirmationModal, SelectionModal} from '../../../../components';
-import users from '../../../../scratch-data/users.json';
+import {apiRequest, handleApiError} from "../../../../util/apiService";
 
-// Упрощенный массив студентов для тестирования
-const simpleStudents = users
-  .filter(user => user.role === 'Student')
-  .map((user, index) => ({
-    id: String(index + 1),
-    firstName: user.firstName,
-    lastName: user.lastName,
-    middleName: user.middleName,
-  }));
+const fetchStudents = async (setStudentList) => {
+  try {
+    const response = await apiRequest({
+      method: 'POST',
+      url: '/students/search/full-info',
+      data: {
+        terminated: false
+      }
+    })
+    setStudentList(response.students);
+  } catch (error) {
+    handleApiError(error)
+  }
+};
 
-// Временные данные для демонстрации
-const danceStyles = [
-  'Бальные танцы',
-  'Хип-хоп',
-  'Современные танцы',
-  'Контемпорари',
-  'Латиноамериканские танцы'
-];
+const fetchClassrooms = async (setClassroomList, startDate, endDate, allowNeighbors) => {
+  try {
+    const response = await apiRequest({
+      method: 'POST',
+      url: '/classrooms/search/available',
+      data: {
+        date_from: startDate.toISOString(),
+        date_to: endDate.toISOString(),
+        are_neighbours_allowed: allowNeighbors,
+        terminated: false
+      },
+    })
+    setClassroomList(response.classrooms);
+  } catch (error) {
+    handleApiError(error)
+  }
+};
 
-const halls = [
-  {id: '1', name: 'Зал 1'},
-  {id: '2', name: 'Зал 2'},
-  {id: '3', name: 'Зал 3'},
-];
+const fetchLessonTypes = async (setLessonTypes) => {
+  try {
+    const response = await apiRequest({
+      method: 'POST',
+      url: '/lessonTypes/search/full-info',
+      data: {
+        is_group: false,
+        terminated: false,
+      }
+    })
+    setLessonTypes(response.lesson_types);
+  } catch (error) {
+    handleApiError(error)
+  }
+};
 
 const CreateIndividualLessonScreen = () => {
   const [startDate, setStartDate] = useState(new Date());
@@ -43,11 +67,19 @@ const CreateIndividualLessonScreen = () => {
   const [isEndDatePickerVisible, setEndDatePickerVisible] = useState(false);
   const [isEndTimePickerVisible, setEndTimePickerVisible] = useState(false);
 
-  const [selectedHall, setSelectedHall] = useState(halls[0].id);
+  const [classroomList, setClassroomList] = useState([]);
+  const [selectedClassroom, setSelectedClassroom] = useState(null);
+
+  const [studentList, setStudentList] = useState([]);
+  const [selectedStudent, setSelectedStudent] = useState(null);
+
   const [allowNeighbors, setAllowNeighbors] = useState(false);
-  const [selectedStudent, setSelectedStudent] = useState(simpleStudents[0]?.id || '');
-  const [selectedDanceStyle, setSelectedDanceStyle] = useState(danceStyles[0]);
+
+  const [lessonTypes, setLessonTypes] = useState([])
+  const [selectedLessonType, setSelectedLessonType] = useState(null);
+
   const [description, setDescription] = useState('');
+  const [lessonName, setLessonName] = useState('');
 
   const [confirmationVisible, setConfirmationVisible] = useState(false);
   const [isHallModalVisible, setIsHallModalVisible] = useState(false);
@@ -55,11 +87,16 @@ const CreateIndividualLessonScreen = () => {
   const [isDanceStyleModalVisible, setIsDanceStyleModalVisible] = useState(false);
 
   useEffect(() => {
-    // Установим начальное значение студента после загрузки компонента
-    if (simpleStudents.length > 0) {
-      setSelectedStudent(String(simpleStudents[0].id));
-    }
+    fetchStudents(setStudentList);
+    fetchLessonTypes(setLessonTypes);
   }, []);
+
+  useEffect(() => {
+    if (startDate && endDate) {
+      fetchClassrooms(setClassroomList, startDate, endDate, allowNeighbors)
+    }
+  }, [startDate, endDate, allowNeighbors]);
+
 
   const handleStartDateConfirm = (date) => {
     const newStartDate = new Date(date);
@@ -80,6 +117,7 @@ const CreateIndividualLessonScreen = () => {
   };
 
   const handleEndDateConfirm = (date) => {
+    console.log(date)
     const newEndDate = new Date(date);
     newEndDate.setHours(endDate.getHours(), endDate.getMinutes());
     setEndDate(newEndDate);
@@ -93,34 +131,49 @@ const CreateIndividualLessonScreen = () => {
     setEndTimePickerVisible(false);
   };
 
-  const handleCreateLesson = () => {
-    setConfirmationVisible(true);
-  };
-
-  const handleConfirm = () => {
+  const handleConfirm = async () => {
     setConfirmationVisible(false);
-    console.log({
-      startDate,
-      endDate,
-      hallId: selectedHall,
-      studentId: selectedStudent,
-      danceStyle: selectedDanceStyle,
-      description
-    });
-    router.back();
+    try {
+      const response = await apiRequest({
+        method: 'POST',
+        url: '/lessons/individual',
+        data: {
+          name: lessonName,
+          description: description,
+          lesson_type_id: selectedLessonType,
+          start_time: startDate.toISOString(),
+          finish_time: endDate.toISOString(),
+          classroom_id: selectedClassroom,
+          student_id: selectedStudent,
+          are_neighbours_allowed: allowNeighbors
+        }
+      })
+      Alert.alert("Создание индивидуального занятия", "Занятие успешно создано", [{text: "OK"}])
+      router.back();
+    } catch (error) {
+      handleApiError(error)
+    }
   };
 
   // Получение названия выбранного зала
   const getSelectedHallName = () => {
-    const hall = halls.find(h => h.id === selectedHall);
+    const hall = classroomList?.find(h => h.id === selectedClassroom);
+    if (!hall) return 'Выберите зал';
     return hall ? hall.name : '';
   };
 
   // Получение имени выбранного студента
   const getSelectedStudentName = () => {
-    const student = simpleStudents.find(s => s.id === selectedStudent);
+    const student = studentList?.find(s => s.id === selectedStudent);
     if (!student) return 'Выберите ученика';
-    return `${student.lastName} ${student.firstName} ${student.middleName || ''}`;
+    return `${student.user.last_name} ${student.user.first_name} ${student.user.middle_name || ''}`;
+  };
+
+  // Получение имени выбранного стиля танца
+  const getSelectedDanceStyleName = () => {
+    const lessonType = lessonTypes.find(s => s.id === selectedLessonType);
+    if (!lessonType) return 'Выберите стиль танца';
+    return lessonType ? lessonType.dance_style.name : '';
   };
 
   return (
@@ -223,15 +276,24 @@ const CreateIndividualLessonScreen = () => {
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.label}>Вид танца</Text>
+          <Text style={styles.label}>Стиль танца</Text>
           <TouchableOpacity
             style={styles.selectInput}
             onPress={() => setIsDanceStyleModalVisible(true)}
           >
-            <Text style={styles.selectText}>{selectedDanceStyle}</Text>
+            <Text style={styles.selectText}>{getSelectedDanceStyleName()}</Text>
             <Ionicons name="chevron-down" size={20} color="#666"/>
           </TouchableOpacity>
         </View>
+
+        <TextInput
+          style={styles.lessonNameInputText}
+          multiline
+          numberOfLines={1}
+          value={lessonName}
+          onChangeText={setLessonName}
+          placeholder="Введите название занятия"
+        />
 
         <View style={styles.section}>
           <Text style={styles.label}>Описание</Text>
@@ -249,7 +311,7 @@ const CreateIndividualLessonScreen = () => {
       <View style={styles.footer}>
         <TouchableOpacity
           style={styles.button}
-          onPress={handleCreateLesson}
+          onPress={() => setConfirmationVisible(true)}
         >
           <Text style={styles.buttonText}>Создать занятие</Text>
         </TouchableOpacity>
@@ -263,6 +325,13 @@ const CreateIndividualLessonScreen = () => {
         onCancel={() => setStartDatePickerVisible(false)}
         date={startDate}
         locale="ru"
+        pickerContainerStyleIOS={{
+          justifyContent: 'center',
+          alignItems: 'center',
+        }}
+        timePickerModeAndroid={"default"}
+        cancelTextIOS={"Отменить"}
+        confirmTextIOS={"Подтвердить"}
       />
 
       <DateTimePickerModal
@@ -272,6 +341,14 @@ const CreateIndividualLessonScreen = () => {
         onCancel={() => setStartTimePickerVisible(false)}
         date={startDate}
         locale="ru"
+        pickerContainerStyleIOS={{
+          justifyContent: 'center',
+          alignItems: 'center',
+        }}
+        minuteInterval={5}
+        timePickerModeAndroid={"default"}
+        cancelTextIOS={"Отменить"}
+        confirmTextIOS={"Подтвердить"}
       />
 
       <DateTimePickerModal
@@ -281,7 +358,13 @@ const CreateIndividualLessonScreen = () => {
         onCancel={() => setEndDatePickerVisible(false)}
         date={endDate}
         locale="ru"
-        minimumDate={startDate}
+        pickerContainerStyleIOS={{
+          justifyContent: 'center',
+          alignItems: 'center',
+        }}
+        timePickerModeAndroid={"default"}
+        cancelTextIOS={"Отменить"}
+        confirmTextIOS={"Подтвердить"}
       />
 
       <DateTimePickerModal
@@ -291,6 +374,14 @@ const CreateIndividualLessonScreen = () => {
         onCancel={() => setEndTimePickerVisible(false)}
         date={endDate}
         locale="ru"
+        pickerContainerStyleIOS={{
+          justifyContent: 'center',
+          alignItems: 'center',
+        }}
+        minuteInterval={5}
+        timePickerModeAndroid={"default"}
+        cancelTextIOS={"Отменить"}
+        confirmTextIOS={"Подтвердить"}
       />
 
       {/* Модальное окно подтверждения */}
@@ -308,10 +399,10 @@ const CreateIndividualLessonScreen = () => {
       <SelectionModal
         visible={isHallModalVisible}
         onClose={() => setIsHallModalVisible(false)}
-        onSelect={setSelectedHall}
+        onSelect={setSelectedClassroom}
         title="Выберите зал"
-        items={halls}
-        selectedValue={selectedHall}
+        items={classroomList}
+        selectedValue={selectedClassroom}
         labelExtractor={(item) => item.name}
         valueExtractor={(item) => item.id}
       />
@@ -322,9 +413,9 @@ const CreateIndividualLessonScreen = () => {
         onClose={() => setIsStudentModalVisible(false)}
         onSelect={setSelectedStudent}
         title="Выберите ученика"
-        items={simpleStudents}
+        items={studentList}
         selectedValue={selectedStudent}
-        labelExtractor={(item) => `${item.lastName} ${item.firstName} ${item.middleName || ''}`}
+        labelExtractor={(item) => `${item.user.last_name} ${item.user.first_name} ${item.user.middle_name || ''}`}
         valueExtractor={(item) => item.id}
       />
 
@@ -332,10 +423,12 @@ const CreateIndividualLessonScreen = () => {
       <SelectionModal
         visible={isDanceStyleModalVisible}
         onClose={() => setIsDanceStyleModalVisible(false)}
-        onSelect={setSelectedDanceStyle}
-        title="Выберите вид танца"
-        items={danceStyles}
-        selectedValue={selectedDanceStyle}
+        onSelect={setSelectedLessonType}
+        title="Выберите стиль танца"
+        items={lessonTypes.filter((item) => item.is_group === false)}
+        selectedValue={selectedLessonType}
+        labelExtractor={(item) => item.dance_style.name}
+        valueExtractor={(item) => item.id}
       />
     </SafeAreaView>
   );
@@ -448,6 +541,15 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontFamily: 'os-regular',
     flex: 1,
+  },
+  lessonNameInputText: {
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 8,
+    padding: 16,
+    textAlignVertical: 'center',
+    height: 50,
+    marginBottom: 16
   }
 });
 

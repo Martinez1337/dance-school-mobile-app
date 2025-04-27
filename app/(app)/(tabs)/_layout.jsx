@@ -1,7 +1,7 @@
 import {useState, useEffect} from "react";
 import Octicons from '@expo/vector-icons/Octicons';
-import { Tabs } from 'expo-router';
-import { globalStyles, HEADER_BACKGROUND, BOTTOM_TAB_BACKGROUND } from "../../../styles/globalStyles";
+import {Tabs} from 'expo-router';
+import {HEADER_BACKGROUND, BOTTOM_TAB_BACKGROUND} from "../../../styles/globalStyles";
 import {useSelector} from "react-redux";
 
 const TabsLayout = () => {
@@ -11,14 +11,17 @@ const TabsLayout = () => {
   useEffect(() => {
     setRole(userRole);
     console.log(`userRole = ${JSON.stringify(userRole)}`);
-  }, [userRole])
+  }, []);
 
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
         headerStyle: {backgroundColor: HEADER_BACKGROUND},
-        headerTitleStyle: globalStyles.headerText,
+        headerTitleStyle: {
+          fontSize: 20,
+          fontFamily: 'os-regular',
+        },
         headerTitleAlign: 'center',
         tabBarActiveTintColor: "white",
         tabBarInactiveTintColor: '#979696',
@@ -38,21 +41,21 @@ const TabsLayout = () => {
         name="events"
         options={{
           title: "Мероприятия",
-          tabBarIcon: ({color}) => <Octicons name="star" size={28} color={color} />,
+          tabBarIcon: ({color}) => <Octicons name="star" size={28} color={color}/>,
         }}
       />
       <Tabs.Screen
         name="index"
         options={{
           title: "Расписание",
-          tabBarIcon: ({color}) => <Octicons name="calendar" size={28} color={color} />,
+          tabBarIcon: ({color}) => <Octicons name="calendar" size={28} color={color}/>,
         }}
       />
       <Tabs.Screen
         name={"(student)"}
         options={{
           title: "Записаться на занятие",
-          tabBarIcon: ({color}) => <Octicons name="repo" size={28} color={color} />,
+          tabBarIcon: ({color}) => <Octicons name="repo" size={28} color={color}/>,
         }}
         redirect={role !== "student"}
       />
@@ -60,7 +63,7 @@ const TabsLayout = () => {
         name={"(teacher)"}
         options={{
           title: "Управление занятиями",
-          tabBarIcon: ({color}) => <Octicons name="checklist" size={28} color={color} />,
+          tabBarIcon: ({color}) => <Octicons name="checklist" size={28} color={color}/>,
         }}
         redirect={role !== "teacher"}
       />
@@ -69,7 +72,7 @@ const TabsLayout = () => {
         options={{
           headerShown: false,
           title: "Профиль",
-          tabBarIcon: ({color}) => <Octicons name="person" size={28} color={color} />,
+          tabBarIcon: ({color}) => <Octicons name="person" size={28} color={color}/>,
         }}
       />
     </Tabs>

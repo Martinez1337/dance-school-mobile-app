@@ -1,7 +1,4 @@
 import { Stack } from 'expo-router';
-import { TouchableOpacity } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { router } from 'expo-router';
 
 export default function StudentLayout() {
   return (
@@ -19,18 +16,13 @@ export default function StudentLayout() {
           fontFamily: 'os-regular',
         },
         headerTitleAlign: 'center',
-        headerBackTitleVisible: false,
-        headerLeft: () => (
-          <TouchableOpacity onPress={() => router.back()}>
-            <Ionicons name="chevron-back" size={24} color="black" />
-          </TouchableOpacity>
-        ),
+        headerBackTitleVisible: false
       }}
     >
       <Stack.Screen
         name="index"
         options={{
-          title: 'Выбор вида танцев',
+          title: 'Запись на занятия',
           headerShown: false
         }}
       />
@@ -45,6 +37,13 @@ export default function StudentLayout() {
         name="schedule-groups"
         options={{
           title: 'Расписание групповых занятий',
+          presentation: 'push'
+        }}
+      />
+      <Stack.Screen
+        name="my-requests"
+        options={{
+          title: 'Мои заявки',
           presentation: 'push'
         }}
       />

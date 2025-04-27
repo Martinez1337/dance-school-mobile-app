@@ -10,44 +10,45 @@ const EventListItem = ({event}) => {
   }
 
   return (
-    <TouchableOpacity
-      onPress={() => {
-      }}
-    >
-      <View style={styles.cardContainer}>
+    <View style={styles.card}>
+
         <Image
-          source={{uri: event.picture}}
+          source={{uri: event.photo_url}}
           style={styles.image}
           placeholder={require("../assets/images/placeholder-image.png")}
           focusable={false}
           contentFit={"cover"}
         />
-        <View style={styles.cardInfoContainer}>
-          <Text style={styles.titleText}>{event.name}</Text>
-          <Text style={styles.eventType}>{event.eventType}</Text>
-          <Text style={styles.description} numberOfLines={2} ellipsizeMode="tail">{event.description}</Text>
-          <View style={styles.startTimeContainer}>
-            <Text style={styles.startTime}>{formatDate(event.startTime)}</Text>
-          </View>
+
+      <View style={styles.cardInfoContainer}>
+        <Text style={styles.titleText}>{event.name}</Text>
+        <Text style={styles.eventType}>{event.event_type.name}</Text>
+        <Text style={styles.description} numberOfLines={2} ellipsizeMode="tail">{event.description}</Text>
+        <View style={styles.startTimeContainer}>
+          <Text style={styles.startTime}>{formatDate(event.start_time)}</Text>
         </View>
       </View>
-    </TouchableOpacity>
+    </View>
   )
 }
 
 const styles = StyleSheet.create({
-  cardContainer: {
+  card: {
+    flex: 1,
     height: 150,
-    flexDirection: "row",
-    marginHorizontal: 5,
+    flexDirection: 'row',
+    backgroundColor: 'white',
     borderRadius: 15,
+    marginBottom: 12,
+    marginHorizontal: 5,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
     shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation:0,
-    borderWidth: 0.5,
-    borderColor: '#e0e0e0',
+    shadowRadius: 3.84,
+    elevation: 5,
   },
   image: {
     height: '100%',

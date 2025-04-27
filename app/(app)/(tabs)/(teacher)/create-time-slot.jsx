@@ -1,25 +1,41 @@
 import React, {useState} from 'react';
-import {View, Text, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity} from 'react-native';
+import {View, Text, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity, Alert} from 'react-native';
 import {Stack, router} from 'expo-router';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
-import {format} from 'date-fns';
+import {format, parseISO} from 'date-fns';
 import {Ionicons} from '@expo/vector-icons';
 
 import {ConfirmationModal, SelectionModal} from '../../../../components';
+import {apiRequest, handleApiError} from "../../../../util/apiService";
+import {useSelector} from "react-redux";
 
 // Дни недели
 const weekDays = [
-  {id: '1', name: 'Понедельник'},
-  {id: '2', name: 'Вторник'},
-  {id: '3', name: 'Среда'},
-  {id: '4', name: 'Четверг'},
-  {id: '5', name: 'Пятница'},
-  {id: '6', name: 'Суббота'},
-  {id: '7', name: 'Воскресенье'},
+  {id: '0', name: 'Понедельник'},
+  {id: '1', name: 'Вторник'},
+  {id: '2', name: 'Среда'},
+  {id: '3', name: 'Четверг'},
+  {id: '4', name: 'Пятница'},
+  {id: '5', name: 'Суббота'},
+  {id: '6', name: 'Воскресенье'},
 ];
 
+const timeToUTC = (timeStr) => {
+  // Парсим строку в объект Date
+  const date = new Date(timeStr);
+
+  // Получаем время в UTC
+  const hours = String(date.getUTCHours()).padStart(2, '0');
+  const minutes = String(date.getUTCMinutes()).padStart(2, '0');
+  const seconds = String(date.getUTCSeconds()).padStart(2, '0');
+  const milliseconds = String(date.getUTCMilliseconds()).padStart(3, '0');
+
+  // Формируем строку в формате HH:mm:ss.SSSZ
+  return `${hours}:${minutes}:${seconds}.${milliseconds}Z`;
+}
+
 const CreateTimeSlotScreen = () => {
-  // Установим начальные времена для старта и окончания
+  const id = useSelector(state => state.session.id);
   const defaultStartTime = new Date();
   defaultStartTime.setHours(10, 0, 0, 0);
 
@@ -52,21 +68,38 @@ const CreateTimeSlotScreen = () => {
   const handleEndTimeConfirm = (time) => {
     setEndTime(time);
     setEndTimePickerVisible(false);
+
+    // Если выбранное время окончания меньше времени начала,
+    // установим время начала на 1 час раньше времени окончания
+    if (time <= endTime) {
+      const newStartTime = new Date(time);
+      newStartTime.setHours(time.getHours() - 1);
+      setStartTime(newStartTime);
+    }
   };
 
   const handleCreateTimeSlot = () => {
     setConfirmationVisible(true);
   };
 
-  const handleConfirm = () => {
-    setConfirmationVisible(false);
-    // В реальном приложении здесь будет логика создания временного слота
-    console.log({
-      weekDay: selectedWeekDay,
-      startTime,
-      endTime,
-    });
-    router.back();
+  const handleConfirm = async () => {
+    try {
+      setConfirmationVisible(false);
+      const creationResponse = await apiRequest({
+        method: 'POST',
+        url: '/slots/',
+        data: {
+          teacher_id: id,
+          day_of_week: selectedWeekDay,
+          start_time: timeToUTC(startTime),
+          end_time: timeToUTC(endTime),
+        },
+      })
+      Alert.alert("Создание слота", "Новый слот был успешно добавлен", [{text: "OK"}])
+      router.back();
+    } catch (error) {
+      handleApiError(error)
+    }
   };
 
   // Получение названия выбранного дня недели
@@ -79,7 +112,7 @@ const CreateTimeSlotScreen = () => {
     <SafeAreaView style={styles.container}>
       <Stack.Screen
         options={{
-          headerTitle: 'Добавление свободного слота',
+          headerTitle: 'Создание свободного слота',
           headerLeft: () => (
             <TouchableOpacity onPress={() => router.back()}>
               <Ionicons name="arrow-back" size={24} color="black"/>
@@ -139,6 +172,13 @@ const CreateTimeSlotScreen = () => {
         date={startTime}
         locale="ru"
         minuteInterval={5}
+        pickerContainerStyleIOS={{
+          justifyContent: 'center',
+          alignItems: 'center',
+        }}
+        timePickerModeAndroid={"default"}
+        cancelTextIOS={"Отменить"}
+        confirmTextIOS={"Подтвердить"}
       />
 
       {/* Модальное окно выбора времени окончания */}
@@ -150,6 +190,13 @@ const CreateTimeSlotScreen = () => {
         date={endTime}
         locale="ru"
         minuteInterval={5}
+        pickerContainerStyleIOS={{
+          justifyContent: 'center',
+          alignItems: 'center',
+        }}
+        timePickerModeAndroid={"default"}
+        cancelTextIOS={"Отменить"}
+        confirmTextIOS={"Подтвердить"}
       />
 
       {/* Модальное окно подтверждения */}
@@ -157,9 +204,9 @@ const CreateTimeSlotScreen = () => {
         visible={confirmationVisible}
         onClose={() => setConfirmationVisible(false)}
         onConfirm={handleConfirm}
-        title="Добавить слот?"
-        message="Вы уверены, что хотите добавить свободный временной слот с указанными параметрами?"
-        confirmText="Добавить"
+        title="Создание слота"
+        message="Создать свободный временной слот с указанными параметрами?"
+        confirmText="Создать"
         cancelText="Отменить"
       />
 
@@ -243,4 +290,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default CreateTimeSlotScreen; 
+export default CreateTimeSlotScreen;

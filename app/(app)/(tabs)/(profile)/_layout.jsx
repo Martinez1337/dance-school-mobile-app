@@ -18,7 +18,10 @@ const ProfileLayout = () => {
       screenOptions={{
         headerShown: true,
         headerStyle: {backgroundColor: HEADER_BACKGROUND},
-        headerTitleStyle: globalStyles.headerText,
+        headerTitleStyle: {
+          fontSize: 20,
+          fontFamily: 'os-regular',
+        },
         headerTitleAlign: "center",
       }}
     >
