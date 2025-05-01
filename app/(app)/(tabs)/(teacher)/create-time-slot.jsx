@@ -2,7 +2,7 @@ import React, {useState} from 'react';
 import {View, Text, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity, Alert} from 'react-native';
 import {Stack, router} from 'expo-router';
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
-import {format, parseISO} from 'date-fns';
+import {format} from 'date-fns';
 import {Ionicons} from '@expo/vector-icons';
 
 import {ConfirmationModal, SelectionModal} from '../../../../components';
@@ -21,7 +21,6 @@ const weekDays = [
 ];
 
 const timeToUTC = (timeStr) => {
-  // Парсим строку в объект Date
   const date = new Date(timeStr);
 
   // Получаем время в UTC
@@ -85,7 +84,7 @@ const CreateTimeSlotScreen = () => {
   const handleConfirm = async () => {
     try {
       setConfirmationVisible(false);
-      const creationResponse = await apiRequest({
+      await apiRequest({
         method: 'POST',
         url: '/slots/',
         data: {
@@ -115,7 +114,7 @@ const CreateTimeSlotScreen = () => {
           headerTitle: 'Создание свободного слота',
           headerLeft: () => (
             <TouchableOpacity onPress={() => router.back()}>
-              <Ionicons name="arrow-back" size={24} color="black"/>
+              <Ionicons name="chevron-back" size={24} color="black"/>
             </TouchableOpacity>
           ),
         }}

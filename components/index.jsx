@@ -18,7 +18,8 @@ import LessonRequestCard from './LessonRequestCard';
 import SelectionModal from "./modals/SelectionModal";
 import StudentCard from './StudentCard';
 import TeacherCard from './TeacherCard';
-
+import SubscriptionSelectionModal from "./modals/SubscriptionSelectionModal";
+import TimeSlotCard from "./TimeSlotCard";
 export {
   ConfirmationModal,
   CreateActionModal,
@@ -40,4 +41,6 @@ export {
   TeacherFilterModal,
   TeacherProfileModal,
   ScrollIndicator,
+  SubscriptionSelectionModal,
+  TimeSlotCard
 }

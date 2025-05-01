@@ -9,24 +9,23 @@ import {Ionicons} from '@expo/vector-icons';
 import {ConfirmationModal, SelectionModal} from '../../../../components';
 import {apiRequest, handleApiError} from "../../../../util/apiService";
 
-const fetchStudents = async (setStudentList) => {
+const fetchStudents = async () => {
   try {
-    const response = await apiRequest({
+    return await apiRequest({
       method: 'POST',
       url: '/students/search/full-info',
       data: {
         terminated: false
       }
     })
-    setStudentList(response.students);
   } catch (error) {
     handleApiError(error)
   }
 };
 
-const fetchClassrooms = async (setClassroomList, startDate, endDate, allowNeighbors) => {
+const fetchClassrooms = async (startDate, endDate, allowNeighbors) => {
   try {
-    const response = await apiRequest({
+    return await apiRequest({
       method: 'POST',
       url: '/classrooms/search/available',
       data: {
@@ -36,15 +35,14 @@ const fetchClassrooms = async (setClassroomList, startDate, endDate, allowNeighb
         terminated: false
       },
     })
-    setClassroomList(response.classrooms);
   } catch (error) {
     handleApiError(error)
   }
 };
 
-const fetchLessonTypes = async (setLessonTypes) => {
+const fetchLessonTypes = async () => {
   try {
-    const response = await apiRequest({
+    return await apiRequest({
       method: 'POST',
       url: '/lessonTypes/search/full-info',
       data: {
@@ -52,7 +50,6 @@ const fetchLessonTypes = async (setLessonTypes) => {
         terminated: false,
       }
     })
-    setLessonTypes(response.lesson_types);
   } catch (error) {
     handleApiError(error)
   }
@@ -87,13 +84,16 @@ const CreateIndividualLessonScreen = () => {
   const [isDanceStyleModalVisible, setIsDanceStyleModalVisible] = useState(false);
 
   useEffect(() => {
-    fetchStudents(setStudentList);
-    fetchLessonTypes(setLessonTypes);
+    fetchStudents()
+      .then((response) => setStudentList(response.students));
+    fetchLessonTypes()
+      .then((response) => setLessonTypes(response.lesson_types));
   }, []);
 
   useEffect(() => {
     if (startDate && endDate) {
-      fetchClassrooms(setClassroomList, startDate, endDate, allowNeighbors)
+      fetchClassrooms(startDate, endDate, allowNeighbors)
+        .then((response) => setClassroomList(response.classrooms))
     }
   }, [startDate, endDate, allowNeighbors]);
 
@@ -133,8 +133,19 @@ const CreateIndividualLessonScreen = () => {
 
   const handleConfirm = async () => {
     setConfirmationVisible(false);
+    const data = {
+        name: lessonName,
+        description: description,
+        lesson_type_id: selectedLessonType,
+        start_time: startDate.toISOString(),
+        finish_time: endDate.toISOString(),
+        classroom_id: selectedClassroom,
+        student_id: selectedStudent,
+        are_neighbours_allowed: allowNeighbors
+    }
+    console.log(data)
     try {
-      const response = await apiRequest({
+      await apiRequest({
         method: 'POST',
         url: '/lessons/individual',
         data: {
@@ -183,7 +194,7 @@ const CreateIndividualLessonScreen = () => {
           headerTitle: 'Создание индивидуального занятия',
           headerLeft: () => (
             <TouchableOpacity onPress={() => router.back()}>
-              <Ionicons name="arrow-back" size={24} color="black"/>
+              <Ionicons name="chevron-back" size={24} color="black"/>
             </TouchableOpacity>
           ),
         }}

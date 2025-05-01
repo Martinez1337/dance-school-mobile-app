@@ -7,9 +7,6 @@ export default function StudentLayout() {
         headerShown: true,
         headerStyle: {
           backgroundColor: 'white',
-          elevation: 0,
-          shadowOpacity: 0,
-          borderBottomWidth: 0,
         },
         headerTitleStyle: {
           fontSize: 20,

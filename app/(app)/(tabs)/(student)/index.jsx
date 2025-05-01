@@ -47,6 +47,7 @@ const danceTypes = [
 ];
 
 export default function StudentDashboard() {
+  const [isGroupView, setIsGroupView] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedDance, setSelectedDance] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -99,8 +100,13 @@ export default function StudentDashboard() {
       <Stack.Screen 
         options={{
           headerShown: true,
+          headerLeft: () => (
+            <TouchableOpacity onPress={() => {}} style={styles.headerButtonLeft}>
+              <Ionicons name="people" size={24} color="#333" />
+            </TouchableOpacity>
+          ),
           headerRight: () => (
-            <TouchableOpacity onPress={navigateToMyRequests} style={styles.headerButton}>
+            <TouchableOpacity onPress={navigateToMyRequests} style={styles.headerButtonRight}>
               <Ionicons name="document-text-outline" size={24} color="#333" />
             </TouchableOpacity>
           ),
@@ -262,8 +268,12 @@ const styles = StyleSheet.create({
     backgroundColor: '#e1e1e1',
     marginHorizontal: 10,
   },
-  headerButton: {
-    marginRight: 15,
+  headerButtonRight: {
+    marginRight: 5,
     padding: 5,
   },
+  headerButtonLeft: {
+    marginLeft: 5,
+    padding: 5
+  }
 });

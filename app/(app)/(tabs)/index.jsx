@@ -2,6 +2,7 @@ import React, {useCallback, useEffect, useState} from 'react';
 import {View, Text, StyleSheet, SafeAreaView, TouchableOpacity} from 'react-native';
 import {FlashList} from "@shopify/flash-list";
 import {format, parseISO, isAfter} from 'date-fns';
+import {formatInTimeZone, fromZonedTime} from 'date-fns-tz';
 import {ru} from "date-fns/locale";
 import {Ionicons} from '@expo/vector-icons';
 import {router, Tabs} from 'expo-router';
@@ -11,17 +12,16 @@ import {CustomCalendar, LessonListItem} from "../../../components";
 import {apiRequest, handleApiError} from "../../../util/apiService";
 
 const fetchLessons = async (role, date) => {
-  const dateFrom = parseISO(date)
-  const dateTo = new Date();
-
+  const dateFrom = fromZonedTime(date, 'UTC')
   // Устанавливаем dateFrom на начало текущего месяца
   dateFrom.setUTCDate(1);
   dateFrom.setUTCHours(0, 0, 0, 0);
 
+  const dateTo = new Date(dateFrom);
   // Устанавливаем dateTo на конец текущего месяца
-  dateTo.setUTCMonth(dateTo.getUTCMonth() + 1);
+  dateTo.setUTCMonth(dateFrom.getUTCMonth() + 1);
   dateTo.setUTCDate(0);
-  dateTo.setUTCHours(0, 0, 0, 0);
+  dateTo.setUTCHours(23, 59, 59, 999);
 
   try {
     return await apiRequest({
@@ -58,7 +58,7 @@ const TimeTableTab = () => {
     }
 
     const marks = {};
-    if (lessons && lessons.length > 0) {
+    if (lessons.length >= 0) {
       // Отмечаем будущие занятие маркерами
       lessons.forEach(lesson => {
         const date = format(parseISO(lesson.start_time), 'yyyy-MM-dd', {locale: ru});
@@ -98,13 +98,18 @@ const TimeTableTab = () => {
     setIsRefreshing(false);
   }
 
-  const handleDayPress = useCallback((day) => {
-    setSelectedDate(day.dateString);
+  const handleDayPress = useCallback((dateData) => {
+    setSelectedDate(dateData.dateString);
   }, [])
 
-  const handleMonthChange = useCallback((month) => {
-    fetchLessons(role, month.dateString)
-      .then((result) => setLessons(result));
+  const handleMonthChange = useCallback((dateData) => {
+    const date = new Date(parseISO(dateData.dateString));
+    date.setUTCDate(1);
+
+    const dateSting = formatInTimeZone(date, 'UTC', 'yyyy-MM-dd');
+    setSelectedDate(dateSting);
+    fetchLessons(role, dateSting)
+      .then((result) => setLessons(result.lessons));
   }, [])
 
   return (
@@ -116,7 +121,7 @@ const TimeTableTab = () => {
           headerLeft: () => (
             <TouchableOpacity
               onPress={() => router.push('/(app)/(shared)/my-groups')}
-              style={{marginLeft: 20}}
+              style={{marginLeft: 20, marginBottom: 5.5}}
             >
               <Ionicons name="people-outline" size={24} color="black"/>
             </TouchableOpacity>

@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import {Ionicons} from '@expo/vector-icons';
 import {format, parseISO} from 'date-fns';
+import {fromZonedTime} from "date-fns-tz";
 import {ru} from 'date-fns/locale';
 
 const SubscriptionSelectionModal = ({
@@ -26,9 +27,8 @@ const SubscriptionSelectionModal = ({
   useEffect(() => {
     // Фильтруем абонементы по типу занятия
     const filtered = subscriptions.filter(sub => {
-      // Проверяем, что абонемент подходит для типа занятия (групповое/индивидуальное)
       const now = new Date();
-      const endDate = parseISO(sub.endTime);
+      const endDate = fromZonedTime(sub.expiration_date);
       
       // Подходит, если не просрочен и не отменен и совпадает тип занятия
       const isValidSub = endDate > now && !sub.terminated;

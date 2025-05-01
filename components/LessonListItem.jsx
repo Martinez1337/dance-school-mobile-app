@@ -11,12 +11,12 @@ const LessonListItem = ({item, onPress}) => {
       onPress={() => onPress(item)}
     >
       <View style={styles.header}>
-        <Text style={styles.title}>{item.name}</Text>
+        <Text style={styles.title}>{item?.name}</Text>
         {isGroupLesson && (
           <View style={styles.levelContainer}>
             <Text style={styles.levelLabel}>Уровень: </Text>
             <View style={styles.levelBadge}>
-              <Text style={styles.levelText}>{item.group.level.name || 'Не указан'}</Text>
+              <Text style={styles.levelText}>{item?.group?.level?.name || 'Не указан'}</Text>
             </View>
           </View>
         )}
@@ -31,18 +31,18 @@ const LessonListItem = ({item, onPress}) => {
         {isGroupLesson && (
           <View style={styles.infoRow}>
             <Text style={styles.label}>Группа:</Text>
-            <Text style={styles.value}>{item.group.name}</Text>
+            <Text style={styles.value}>{item?.group?.name}</Text>
           </View>
         )}
 
         <View style={styles.infoRow}>
           <Text style={styles.label}>Зал:</Text>
-          <Text style={styles.value}>{item.classroom.name || 'Не указан'}</Text>
+          <Text style={styles.value}>{item?.classroom?.name || 'Не указан'}</Text>
         </View>
 
         <View style={styles.timeContainer}>
           <Text style={styles.time}>
-            {format(parseISO(item.start_time), 'HH:mm', {locale: ru})} - {format(parseISO(item.finish_time), 'HH:mm', {locale: ru})}
+            {format(parseISO(item?.start_time), 'HH:mm', {locale: ru})} - {format(parseISO(item?.finish_time), 'HH:mm', {locale: ru})}
           </Text>
         </View>
       </View>

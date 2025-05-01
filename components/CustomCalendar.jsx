@@ -21,13 +21,14 @@ LocaleConfig.defaultLocale = 'ru';
 const CustomCalendar = ({markedDates, onDayPress, onMonthChange}) => {
   return (
     <Calendar
-      onMonthChange={(month) => onMonthChange(month)}
-      onDayPress={(day) => onDayPress(day)}
+      onMonthChange={(dateData) => onMonthChange(dateData)}
+      onDayPress={(dateData) => onDayPress(dateData)}
       markedDates={markedDates}
       monthFormat={'MMMM yyyy'}
       firstDay={1}
       minDate={"1996-05-10"}
       maxDate={"2030-05-30"}
+      hideExtraDays={true}
       enableSwipeMonths={true}
       theme={{
         todayTextColor: "#d903e4",

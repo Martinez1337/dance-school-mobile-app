@@ -1,38 +1,38 @@
-import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, FlatList } from 'react-native';
-import { router, Stack } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
-import { useState, useEffect } from 'react';
-import groups from '../../../../scratch-data/groups.json';
+import {View, Text, StyleSheet, SafeAreaView, TouchableOpacity, FlatList} from 'react-native';
+import {router, Stack} from 'expo-router';
+import {Ionicons} from '@expo/vector-icons';
+import {useState, useEffect} from 'react';
+import {useSelector} from "react-redux";
 
 export default function MyGroupsScreen() {
+  const groups = useSelector((state) => state.session.groups);
+  const role = useSelector((state) => state.session.role);
+
   const [userGroups, setUserGroups] = useState([]);
-  const currentUserId = 'e1a5c879-9a1d-45c2-8f0d-d3442f2dcd1a';
-  const userRole = 'Student';
+  const [userRole, setUserRole] = useState(null)
 
   useEffect(() => {
-    // Фильтруем группы в зависимости от роли пользователя
-    const filteredGroups = groups.filter(group => 
-      userRole === 'Teacher' 
-        ? group.teacher.id === currentUserId
-        : group.students.some(student => student.id === currentUserId)
-    );
-    setUserGroups(filteredGroups);
-  }, []);
+    setUserGroups(groups)
+  }, [groups]);
+
+  useEffect(() => {
+    setUserRole(role)
+  }, [role])
 
   const handleGroupPress = (groupId) => {
     router.push(`/group/${groupId}`);
   };
 
-  const renderGroupItem = ({ item }) => (
-    <TouchableOpacity 
+  const renderGroupItem = ({item}) => (
+    <TouchableOpacity
       style={styles.groupItem}
       onPress={() => handleGroupPress(item.id)}
     >
       <View style={styles.groupContent}>
-        <Text style={styles.groupName}>{item.name}</Text>
-        <Text style={styles.groupLevel}>{item.level}</Text>
+        <Text style={styles.groupName}>{item?.name}</Text>
+        <Text style={styles.groupLevel}>{item?.level?.name}</Text>
       </View>
-      <Ionicons name="chevron-forward" size={24} color="#666" />
+      <Ionicons name="chevron-forward" size={24} color="#666"/>
     </TouchableOpacity>
   );
 
@@ -47,17 +47,19 @@ export default function MyGroupsScreen() {
       }}/>
 
       {userGroups.length > 0 ? (
-        <FlatList
-          data={userGroups}
-          renderItem={renderGroupItem}
-          keyExtractor={item => item.id}
-          contentContainerStyle={styles.listContainer}
-          showsVerticalScrollIndicator={false}
-        />
+        <View>
+          <FlatList
+            data={userGroups}
+            renderItem={renderGroupItem}
+            keyExtractor={item => item.id}
+            contentContainerStyle={styles.listContainer}
+            showsVerticalScrollIndicator={false}
+          />
+        </View>
       ) : (
         <View style={styles.emptyContainer}>
           <Text style={styles.emptyText}>
-            {userRole === 'Teacher' 
+            {userRole === 'teacher'
               ? 'У вас пока нет групп для преподавания'
               : 'Вы пока не состоите ни в одной группе'
             }

@@ -1,14 +1,19 @@
 import {Stack} from 'expo-router';
-import {globalStyles, HEADER_BACKGROUND} from '../../../../styles/globalStyles';
+import {HEADER_BACKGROUND} from '../../../../styles/globalStyles';
 
 export default function TeacherLayout() {
   return (
     <Stack
       screenOptions={{
         headerStyle: {backgroundColor: HEADER_BACKGROUND},
-        headerTitleStyle: globalStyles.headerText,
+        headerTitleStyle: {
+          fontSize: 20,
+          fontFamily: 'os-regular',
+          color: "black"
+        },
         headerTitleAlign: 'center',
         headerTintColor: 'white',
+        title: "Загрузка",
       }}
     >
       <Stack.Screen

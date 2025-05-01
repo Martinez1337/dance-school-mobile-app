@@ -139,7 +139,9 @@ const Profile = () => {
               placeholder="Введите описание"
               multiline={true}
             />
-            <Text style={styles.charCount}>{user.description?.length}/{MAX_DESCRIPTION_LENGTH}</Text>
+            <Text style={styles.charCount}>
+              {user.description ? user.description.length : '0'} / {MAX_DESCRIPTION_LENGTH}
+            </Text>
           </View>
 
           <View style={styles.saveButtonContainer}>

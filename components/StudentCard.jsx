@@ -1,27 +1,32 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import {View, Text, StyleSheet, TouchableOpacity} from 'react-native';
+import {Ionicons} from '@expo/vector-icons';
+import {Image} from 'expo-image';
 
-const StudentCard = ({ student, onDelete, isTeacher }) => {
-  const fullName = `${student.lastName} ${student.firstName} ${student.middleName || ''}`.trim();
+
+const StudentCard = ({student, onDelete, isTeacher}) => {
+  const fullName = `${student.user.last_name} ${student.user.first_name} ${student.user.middle_name || ''}`.trim();
 
   return (
     <View style={styles.card}>
       <View style={styles.content}>
-        <Image 
-          source={{ uri: student.photo || 'https://via.placeholder.com/50' }}
+        <Image
+          source={{uri: student.user.photo}}
           style={styles.avatar}
+          placeholder={require("../assets/images/user-profile-placeholder.jpg")}
+          contentFit={'cover'}
+          placeholderContentFit={"cover"}
         />
         <View style={styles.info}>
           <Text style={styles.name}>{fullName}</Text>
-          <Text style={styles.level}>Уровень: {student.level || 'Не указан'}</Text>
+          <Text style={styles.level}>Уровень: {student.level.name || 'Не указан'}</Text>
         </View>
         {isTeacher && (
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.deleteButton}
             onPress={onDelete}
           >
-            <Ionicons name="trash-outline" size={20} color="#FF3B30" />
+            <Ionicons name="trash-outline" size={20} color="#FF3B30"/>
           </TouchableOpacity>
         )}
       </View>

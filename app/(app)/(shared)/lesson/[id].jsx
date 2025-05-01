@@ -1,14 +1,13 @@
-import {View, Text, StyleSheet, ScrollView, Image, TouchableOpacity, Alert} from 'react-native';
+import {View, Text, StyleSheet, ScrollView, Image, TouchableOpacity, Alert, ActivityIndicator} from 'react-native';
 import {useLocalSearchParams, router, Stack} from 'expo-router';
-import {useEffect, useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import {FlashList} from '@shopify/flash-list';
 import {Ionicons} from '@expo/vector-icons';
 import {format, parseISO} from 'date-fns';
 import {useSelector} from "react-redux";
 import {ru} from 'date-fns/locale';
 
-import {TeacherCard, TeacherProfileModal, ConfirmationModal} from '../../../../components';
-import SubscriptionSelectionModal from '../../../../components/modals/SubscriptionSelectionModal';
+import {TeacherCard, TeacherProfileModal, ConfirmationModal, SubscriptionSelectionModal, StudentCard} from '../../../../components';
 import {apiRequest, handleApiError} from "../../../../util/apiService";
 
 const parseTime = (timeData) => format(parseISO(timeData), 'HH:mm', {locale: ru});
@@ -30,51 +29,63 @@ const LessonScreen = () => {
 
   const userSession = useSelector(state => state.session);
   const [role, setRole] = useState(userSession.role);
+  const [userSubscriptions, setUserSubscriptions] = useState(userSession.subscriptions);
+  const [selectedSubscription, setSelectedSubscription] = useState(null);
 
+  const [isLoading, setIsLoading] = useState(true)
   const [lessonData, setLessonData] = useState(null);
-  const [teacherProfileVisible, setTeacherProfileVisible] = useState(false);
-  const [selectedTeacher, setSelectedTeacher] = useState(null);
+  const [isStudentsExpanded, setIsStudentsExpanded] = useState(false);
+
   const [hasValidSubscription, setHasValidSubscription] = useState(false);
   const [isStudentInGroup, setIsStudentInGroup] = useState(false);
+  const [isParticipating, setIsParticipating] = useState(false);
+
+  const [selectedTeacher, setSelectedTeacher] = useState(null);
+  const [teacherProfileVisible, setTeacherProfileVisible] = useState(false);
   const [cancelModalVisible, setCancelModalVisible] = useState(false);
   const [subscriptionModalVisible, setSubscriptionModalVisible] = useState(false);
-  const [userSubscriptions, setUserSubscriptions] = useState([]);
-  const [isParticipating, setIsParticipating] = useState(false);
-  const [selectedSubscription, setSelectedSubscription] = useState(null);
 
   useEffect(() => {
     setRole(userSession.role);
+    setUserSubscriptions(userSession.subscriptions);
   }, [userSession])
 
   useEffect(() => {
     fetchLesson(id)
-      .then((result) => setLessonData(result))
+      .then((result) => {
+        setLessonData(result)
+        setIsLoading(false)
+      })
   }, []);
 
-  if (!lessonData) {
-    return null;
+  useEffect(() => {
+    if (!lessonData) {
+      return;
+    }
+
+    if (lessonData.group && role === "student") {
+      const isCurrentStudentParticipating = lessonData.actual_students
+        .some(student => student.id === userSession.id)
+      const hasSubscription = lessonData.subscription_templates.some(template =>
+        userSession.subscriptions.some(sub =>
+          sub.subscription_template.id === template.id
+        )
+      );
+      const isCurrentStudentInGroup = lessonData.group.students.some(student => student.id === userSession.id)
+
+      setIsParticipating(isCurrentStudentParticipating)
+      setHasValidSubscription(hasSubscription)
+      setIsStudentInGroup(isCurrentStudentInGroup)
+    }
+  }, [lessonData])
+
+  if (isLoading && !lessonData) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="small" color="#d903e4"/>
+      </View>
+    )
   }
-
-  const showJoinButton =
-    lessonData.group &&
-    lessonData.currentStudents < lessonData.maxStudents &&
-    role === "student" &&
-    !isStudentInGroup;
-
-  const showCancelButton =
-    lessonData.group &&
-    role === "student" &&
-    lessonData.actual_students.some((actualStudent) => actualStudent.id === userSession.id);
-    
-  const showParticipateButton =
-    lessonData.group &&
-    role === "student" &&
-    lessonData.group.students.some((student) => student.id === userSession.id) &&
-    !lessonData.actual_students.some((actualStudent) => actualStudent.id === userSession.id);
-
-  const handleJoinGroup = () => {
-    console.log('Joining group:', lessonData.group.id);
-  };
 
   const handleCancelLesson = () => {
     console.log('Cancelling lesson for group:', lessonData.group.id);
@@ -113,10 +124,6 @@ const LessonScreen = () => {
       <Stack.Screen
         options={{
           title: "Информация о занятии",
-          headerTitleStyle: {
-            fontSize: 20,
-            fontFamily: 'os-regular'
-          },
           headerLeft: () => (
             <TouchableOpacity onPress={() => router.back()}>
               <Ionicons name="chevron-back" size={24} color="black"/>
@@ -182,7 +189,7 @@ const LessonScreen = () => {
         </View>
       </View>
 
-      {showParticipateButton && (
+      {isParticipating && (
         <View style={styles.participatingContainer}>
           <View style={styles.participatingHeader}>
             <Ionicons name="checkmark-circle" size={24} color="#4CAF50" />
@@ -217,6 +224,17 @@ const LessonScreen = () => {
         </View>
       )}
 
+      {!isParticipating && !hasValidSubscription && role === 'student' && (
+        <View style={styles.buttonContainer}>
+          <TouchableOpacity
+            style={styles.button}
+            onPress={handleGoToSubscriptions}
+          >
+            <Text style={styles.buttonText}>Приобрести абонемент</Text>
+          </TouchableOpacity>
+        </View>
+      )}
+
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Преподаватели</Text>
         <View style={{flex: 1}}>
@@ -237,35 +255,46 @@ const LessonScreen = () => {
         </View>
         <TeacherProfileModal
           visible={teacherProfileVisible}
-          onClose={() => {
-            setTeacherProfileVisible(false)
-            setSelectedTeacher(null)
+          onClose={async () => {
+            await setTeacherProfileVisible(false)
+            await setSelectedTeacher(null)
           }}
           teacher={selectedTeacher}
         />
       </View>
 
-      {/*{showJoinButton && (*/}
-      {/*  <View style={styles.buttonContainer}>*/}
-      {/*    {hasValidSubscription ? (*/}
-      {/*      <TouchableOpacity*/}
-      {/*        style={styles.button}*/}
-      {/*        onPress={handleJoinGroup}*/}
-      {/*      >*/}
-      {/*        <Text style={styles.buttonText}>Вступить в группу</Text>*/}
-      {/*      </TouchableOpacity>*/}
-      {/*    ) : (*/}
-      {/*      <TouchableOpacity*/}
-      {/*        style={styles.button}*/}
-      {/*        onPress={handleGoToSubscriptions}*/}
-      {/*      >*/}
-      {/*        <Text style={styles.buttonText}>Приобрести абонемент</Text>*/}
-      {/*      </TouchableOpacity>*/}
-      {/*    )}*/}
-      {/*  </View>*/}
-      {/*)}*/}
+      <View style={styles.section}>
+        <View style={[styles.accordionHeader, isStudentsExpanded && styles.accordionHeaderExpanded]}>
+          <Text style={styles.sectionTitle}>Участники занятия</Text>
+          <TouchableOpacity onPress={() => setIsStudentsExpanded(!isStudentsExpanded)}>
+            <Ionicons
+              name={isStudentsExpanded ? "chevron-up" : "chevron-down"}
+              size={24}
+              color="#666"
+            />
+          </TouchableOpacity>
+        </View>
 
-      {showParticipateButton && (
+        {isStudentsExpanded && (
+          <View style={styles.studentsList}>
+            {lessonData.actual_students && lessonData.actual_students.length > 0 ? (
+              lessonData.actual_students.map((student) => (
+                <StudentCard
+                  key={student.id}
+                  student={student}
+                  isTeacher={false}
+                />
+              ))
+            ) : (
+              <Text style={styles.noStudentsText}>
+                Пока никто не записался на это занятие
+              </Text>
+            )}
+          </View>
+        )}
+      </View>
+
+      {!isParticipating && role === 'student' && (
         <View style={styles.buttonContainer}>
           <TouchableOpacity
             style={styles.participateButton}
@@ -276,7 +305,7 @@ const LessonScreen = () => {
         </View>
       )}
 
-      {showCancelButton && (
+      {isParticipating && role === 'student' && (
         <View style={styles.buttonContainer}>
           <TouchableOpacity
             style={styles.cancelButton}
@@ -289,27 +318,33 @@ const LessonScreen = () => {
 
       <ConfirmationModal
         visible={cancelModalVisible}
-        onClose={() => setCancelModalVisible(false)}
+        onClose={async () => await setCancelModalVisible(false)}
         onConfirm={handleCancelLesson}
         title="Отмена занятия"
         message="Вы уверены, что хотите отменить это занятие? Это действие нельзя будет отменить."
         confirmText="Да, отменить"
         cancelText="Нет, вернуться"
       />
-      
-      <SubscriptionSelectionModal
-        visible={subscriptionModalVisible}
-        onClose={() => setSubscriptionModalVisible(false)}
-        onSelect={handleSelectSubscription}
-        title="Выберите абонемент для занятия"
-        subscriptions={userSubscriptions}
-        lessonType={lessonData.lessonType === "Group" ? "group" : "individual"}
-      />
+
+      {/*<SubscriptionSelectionModal*/}
+      {/*  visible={subscriptionModalVisible}*/}
+      {/*  onClose={() => setSubscriptionModalVisible(false)}*/}
+      {/*  onSelect={handleSelectSubscription}*/}
+      {/*  title="Выберите абонемент для занятия"*/}
+      {/*  subscriptions={userSubscriptions}*/}
+      {/*  lessonType={lessonData.lessonType === "Group" ? "group" : "individual"}*/}
+      {/*/>*/}
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: "white"
+  },
   container: {
     flex: 1,
     backgroundColor: '#fff',
@@ -447,6 +482,23 @@ const styles = StyleSheet.create({
     fontFamily: 'os-regular',
     color: '#666',
     marginLeft: 32,
+  },
+  accordionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  accordionHeaderExpanded: {
+    marginBottom: 16
+  },
+  studentsList: {
+    marginTop: 8,
+  },
+  noStudentsText: {
+    fontSize: 16,
+    color: '#666',
+    fontFamily: 'os-regular',
+    textAlign: 'center',
   },
 });
 

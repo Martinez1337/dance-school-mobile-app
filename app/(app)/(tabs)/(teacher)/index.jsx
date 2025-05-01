@@ -67,6 +67,14 @@ const LessonRequestsScreen = () => {
       <Tabs.Screen
         options={{
           headerTitle: 'Заявки на занятия',
+          headerLeft: () => (
+            <TouchableOpacity
+              onPress={() => router.push('/(app)/(tabs)/(teacher)/my-slots')}
+              style={styles.slotsButton}
+            >
+              <Ionicons name="time-outline" size={24} color="black"/>
+            </TouchableOpacity>
+          ),
           headerRight: () => (
             <TouchableOpacity
               onPress={() => setIsCreateModalVisible(true)}
@@ -123,7 +131,10 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
   },
   createButton: {
-    marginRight: 16,
+    marginRight: 5,
+  },
+  slotsButton: {
+    marginLeft: 5,
   },
   emptyContainer: {
     flex: 1,

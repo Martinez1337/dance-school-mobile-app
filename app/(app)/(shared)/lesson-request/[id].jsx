@@ -9,17 +9,18 @@ import {Ionicons} from '@expo/vector-icons';
 import {ConfirmationModal, SelectionModal} from '../../../../components';
 import {apiRequest, handleApiError} from "../../../../util/apiService";
 
-const fetchClassrooms = async (setClassroomList, startDate, endDate) => {
+const fetchClassrooms = async (startDate, endDate, allowNeighbors) => {
   try {
-    const response = await apiRequest({
+    return await apiRequest({
       method: 'POST',
       url: '/classrooms/search/available',
       data: {
         date_from: startDate.toISOString(),
         date_to: endDate.toISOString(),
+        are_neighbours_allowed: allowNeighbors,
+        terminated: false
       },
     })
-    setClassroomList(response);
   } catch (error) {
     handleApiError(error)
   }
@@ -30,7 +31,6 @@ const LessonRequestScreen = () => {
   const requestData = JSON.parse(params.request);
   const student = requestData.actual_students[0];
 
-  // const [allowNeighbors, setAllowNeighbors] = useState(false);
   const [confirmationVisible, setConfirmationVisible] = useState(false);
   const [actionType, setActionType] = useState(null);
   const [isClassroomModalVisible, setIsClassroomModalVisible] = useState(false);
@@ -39,10 +39,10 @@ const LessonRequestScreen = () => {
 
   useEffect(() => {
     fetchClassrooms(
-      setClassroomList,
       new Date(parseISO(requestData.start_time)),
-      new Date(parseISO(requestData.finish_time))
-    )
+      new Date(parseISO(requestData.finish_time)),
+      requestData.are_neighbours_allowed
+    ).then((response) => setClassroomList(response.classrooms))
   }, []);
 
   const handleAction = (type) => {
@@ -75,7 +75,7 @@ const LessonRequestScreen = () => {
   };
 
   const getSelectedHallName = () => {
-    const classroom = classroomList.find(c => c.id === selectedClassroom);
+    const classroom = classroomList?.find(c => c.id === selectedClassroom);
     return classroom ? classroom.name : 'Выберите зал';
   };
 

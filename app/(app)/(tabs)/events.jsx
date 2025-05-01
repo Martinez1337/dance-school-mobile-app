@@ -5,7 +5,7 @@ import {
   SafeAreaView,
   TouchableOpacity,
   RefreshControl,
-  ActivityIndicator, Text
+  ActivityIndicator
 } from 'react-native';
 import {Ionicons} from '@expo/vector-icons';
 import React, {useCallback, useEffect, useState} from "react";

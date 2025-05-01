@@ -1,23 +1,72 @@
 import React, {useState, useEffect} from 'react';
-import {View, Text, StyleSheet, SafeAreaView, ScrollView, Alert, TouchableOpacity} from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  SafeAreaView,
+  ScrollView,
+  Alert,
+  TouchableOpacity,
+  ActivityIndicator
+} from 'react-native';
 import {Stack, router, useLocalSearchParams} from 'expo-router';
-import {useSelector} from "react-redux";
+import {useDispatch, useSelector} from "react-redux";
 import {Ionicons} from '@expo/vector-icons';
 
 import {ConfirmationModal, StudentCard, TeacherCard, TeacherProfileModal} from '../../../../components';
-import groups from '../../../../scratch-data/groups.json';
-import users from '../../../../scratch-data/users.json';
+import {apiRequest, handleApiError} from "../../../../util/apiService";
+import {setSession} from "../../../../redux/slices/sessionSlice";
+import {setUser} from "../../../../redux/slices/userSlice";
+import {setLevel} from "../../../../redux/slices/levelSlice";
+
+const fetchGroupInfo = async (id) => {
+  try {
+    console.log('group id', id);
+    return await apiRequest({
+      method: 'GET',
+      url: `/groups/full-info/${id}`,
+    })
+  } catch (error) {
+    handleApiError(error)
+    router.back()
+  }
+}
+
+const fetchUserInfo = async () => {
+  try {
+    const meResponse = await apiRequest({
+      method: 'GET',
+      url: '/auth/me'
+    })
+    console.log(`meResponse: ${JSON.stringify(meResponse)}`);
+    return meResponse;
+  } catch (error) {
+    handleApiError(error)
+  }
+}
+
+const deleteStudentFromGroup = async (groupId, studentId) => {
+  try {
+    await apiRequest({
+      method: 'DELETE',
+      url: `/students/groups/${studentId}/${groupId}`
+    })
+  } catch (error) {
+    handleApiError(error)
+  }
+}
 
 const GroupScreen = () => {
+  const dispatch = useDispatch();
   const {id} = useLocalSearchParams();
   const userRole = useSelector(state => state.session.role);
-  const userId = useSelector(state => state.user.id);
+  const userId = useSelector(state => state.session.id);
 
+  const [role, setRole] = useState(userRole);
   const [group, setGroup] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
   const [isConfirmationVisible, setIsConfirmationVisible] = useState(false);
   const [studentToDelete, setStudentToDelete] = useState(null);
-  const [role, setRole] = useState(userRole);
-  const [isUserInGroup, setIsUserInGroup] = useState(false);
   const [teacherProfileVisible, setTeacherProfileVisible] = useState(false);
   const [selectedTeacher, setSelectedTeacher] = useState(null);
   const [isLeaveConfirmVisible, setIsLeaveConfirmVisible] = useState(false);
@@ -27,70 +76,40 @@ const GroupScreen = () => {
   }, [userRole])
 
   useEffect(() => {
-    const foundGroup = groups.find(g => g.id === id);
-    if (foundGroup) {
-      const studentsWithDetails = foundGroup.students.map(student => {
-        const fullStudentInfo = users.find(user => user.id === student.id);
-        return {
-          ...student,
-          photo: fullStudentInfo?.photo,
-          level: fullStudentInfo?.level
-        };
-      });
+    fetchGroupInfo(id)
+      .then((response) => {
+        setGroup(response)
+        setIsLoading(false)
+    });
+  }, []);
 
-      // Получить информацию о преподавателях
-      let teachersData = [];
-      if (foundGroup.teacher) {
-        const mainTeacher = users.find(user => user.id === foundGroup.teacher.id);
-        if (mainTeacher) {
-          teachersData.push(mainTeacher);
-        }
-      }
-      
-      // Если есть другие преподаватели
-      if (foundGroup.additionalTeachers) {
-        const additionalTeachersData = foundGroup.additionalTeachers
-          .map(teacherId => users.find(user => user.id === teacherId))
-          .filter(Boolean);
-        teachersData = [...teachersData, ...additionalTeachersData];
-      }
-
-      // Проверяем, является ли текущий пользователь участником группы
-      const isCurrentUserInGroup = studentsWithDetails.some(student => student.id === userId);
-      setIsUserInGroup(isCurrentUserInGroup);
-
-      setGroup({
-        ...foundGroup,
-        students: studentsWithDetails,
-        teachers: teachersData,
-        // Добавляем стили танцев если их нет
-        danceStyles: foundGroup.danceStyles || ['Аргентинское танго', 'Контемпорари']
-      });
-    }
-  }, [id, userId]);
-
-  if (!group) {
+  if (isLoading && !group) {
     return (
-      <SafeAreaView style={styles.container}>
-        <Text>Группа не найдена</Text>
-      </SafeAreaView>
-    );
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="small" color="#d903e4"/>
+      </View>
+    )
   }
+
+  const isUserInGroup = group.students.some(student => student.id === userId)
 
   const handleDeleteStudent = (student) => {
     setStudentToDelete(student);
     setIsConfirmationVisible(true);
   };
 
-  const handleConfirmDelete = () => {
+  const handleConfirmDelete = async () => {
     console.log('Удаление студента:', studentToDelete.id);
 
+    setIsLoading(true)
+    await deleteStudentFromGroup(group.id, studentToDelete.id)
+
     // Обновляем состояние группы, удаляя студента
-    const updatedStudents = group.students.filter(s => s.id !== studentToDelete.id);
-    setGroup({
-      ...group,
-      students: updatedStudents
-    });
+    fetchGroupInfo(id)
+      .then((response) => {
+        setGroup(response)
+        setIsLoading(false)
+      });
 
     setIsConfirmationVisible(false);
     setStudentToDelete(null);
@@ -98,7 +117,7 @@ const GroupScreen = () => {
     // Показываем уведомление
     Alert.alert(
       "Успешно",
-      `Ученик ${studentToDelete.firstName} ${studentToDelete.lastName} удален из группы`,
+      `Ученик ${studentToDelete.user.first_name} ${studentToDelete.user.last_name} удален из группы`,
       [{text: "OK"}]
     );
   };
@@ -108,36 +127,35 @@ const GroupScreen = () => {
     setTeacherProfileVisible(true);
   };
 
-  const handleLeaveGroup = () => {
-    setIsLeaveConfirmVisible(true);
-  };
-
-  const confirmLeaveGroup = () => {
+  const confirmLeaveGroup = async () => {
     console.log('Выход из группы:', id);
-    
-    // Обновляем состояние группы, удаляя текущего пользователя
-    const updatedStudents = group.students.filter(s => s.id !== userId);
-    setGroup({
-      ...group,
-      students: updatedStudents
-    });
-    
-    setIsUserInGroup(false);
-    setIsLeaveConfirmVisible(false);
-    
+
+    setIsLoading(true)
+    await deleteStudentFromGroup(group.id, userId)
+    await fetchUserInfo()
+      .then((response) => {
+        dispatch(setSession(response))
+        dispatch(setUser(response.user))
+        if (response.level) {
+          dispatch(setLevel(response.level))
+        }
+      })
+    setIsLeaveConfirmVisible(false)
+
     // Показываем уведомление
     Alert.alert(
       "Успешно",
       "Вы вышли из группы",
       [{text: "OK"}]
     );
+    router.back();
   };
 
   return (
     <SafeAreaView style={styles.container}>
       <Stack.Screen
         options={{
-          headerTitle: group.name,
+          headerTitle: group?.name,
           headerTitleStyle: {
             fontSize: 20,
             fontFamily: 'os-regular',
@@ -151,24 +169,12 @@ const GroupScreen = () => {
           <View style={styles.infoRow}>
             <Ionicons name="people-outline" size={20} color="#666"/>
             <Text style={styles.infoText}>
-              {group.students.length}/{group.maxStudentCapacity} учеников
+              {group.students?.length} / {group?.max_capacity} учеников
             </Text>
           </View>
           <View style={styles.infoRow}>
             <Ionicons name="school-outline" size={20} color="#666"/>
-            <Text style={styles.infoText}>Уровень: {group.level}</Text>
-          </View>
-          <View style={styles.infoRow}>
-            <Ionicons name="person-outline" size={20} color="#666"/>
-            <Text style={styles.infoText}>
-              Преподаватель: {group.teacher?.firstName} {group.teacher?.lastName}
-            </Text>
-          </View>
-          <View style={styles.infoRow}>
-            <Ionicons name="musical-notes-outline" size={20} color="#666"/>
-            <Text style={styles.infoText}>
-              Стили танца: {group.danceStyles.join(', ')}
-            </Text>
+            <Text style={styles.infoText}>Уровень: {group.level.name}</Text>
           </View>
           <View style={styles.infoRow}>
             <Ionicons name="information-circle-outline" size={20} color="#666"/>
@@ -193,7 +199,7 @@ const GroupScreen = () => {
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Ученики</Text>
-          {group.students.length > 0 ? (
+          {group.students && group.students.length > 0 ? (
             group.students.map((student) => (
               <StudentCard
                 key={student.id}
@@ -207,11 +213,11 @@ const GroupScreen = () => {
           )}
         </View>
 
-        {isUserInGroup && role === "Student" && (
+        {isUserInGroup && role === "student" && (
           <View style={styles.buttonContainer}>
             <TouchableOpacity 
               style={styles.leaveButton}
-              onPress={handleLeaveGroup}
+              onPress={() => setIsLeaveConfirmVisible(true)}
             >
               <Text style={styles.leaveButtonText}>Выйти из группы</Text>
             </TouchableOpacity>
@@ -221,17 +227,17 @@ const GroupScreen = () => {
 
       <ConfirmationModal
         visible={isConfirmationVisible}
-        onClose={() => setIsConfirmationVisible(false)}
+        onClose={async () => await setIsConfirmationVisible(false)}
         onConfirm={handleConfirmDelete}
         title="Удалить ученика?"
-        message={`Вы уверены, что хотите удалить ${studentToDelete?.firstName} ${studentToDelete?.lastName} из группы?`}
+        message={`Вы уверены, что хотите удалить ${studentToDelete?.user.first_name} ${studentToDelete?.user.last_name} из группы?`}
         confirmText="Удалить"
         cancelText="Отменить"
       />
 
       <ConfirmationModal
         visible={isLeaveConfirmVisible}
-        onClose={() => setIsLeaveConfirmVisible(false)}
+        onClose={async () => await setIsLeaveConfirmVisible(false)}
         onConfirm={confirmLeaveGroup}
         title="Выход из группы"
         message="Вы уверены, что хотите выйти из этой группы?"
@@ -241,9 +247,9 @@ const GroupScreen = () => {
 
       <TeacherProfileModal
         visible={teacherProfileVisible}
-        onClose={() => {
-          setTeacherProfileVisible(false);
-          setSelectedTeacher(null);
+        onClose={async () => {
+          await setTeacherProfileVisible(false);
+          await setSelectedTeacher(null);
         }}
         teacher={selectedTeacher}
       />
@@ -252,6 +258,12 @@ const GroupScreen = () => {
 };
 
 const styles = StyleSheet.create({
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: "white"
+  },
   container: {
     flex: 1,
     backgroundColor: '#fff',

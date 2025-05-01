@@ -27,7 +27,6 @@ const onSignInHandler = async (values, dispatch) => {
     client_secret: null,
   }
 
-  //todo Написать обработку ошибок
   try {
     const authResponse = await login(requestBody)
     console.log(`authResponse: ${JSON.stringify(authResponse)}`);
@@ -44,7 +43,9 @@ const onSignInHandler = async (values, dispatch) => {
     }
 
     router.replace("/(tabs)/(profile)");
-  } catch (error) {handleApiError(error)}
+  } catch (error) {
+    handleApiError(error)
+  }
 }
 
 const Index = () => {
