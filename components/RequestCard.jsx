@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet} from 'react-native';
 import { format, parseISO } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import { Ionicons } from '@expo/vector-icons';
@@ -23,61 +23,61 @@ const statusColors = {
 };
 
 const RequestCard = ({ request }) => {
-  const { status = 'pending' } = request;
-  const statusStyle = statusColors[status] || statusColors.pending;
-  
-  // Форматируем дату создания заявки
   const formattedDate = format(
-    parseISO(request.createdAt), 
-    'd MMMM yyyy', 
+    parseISO(request.created_at),
+    'd MMMM yyyy',
     { locale: ru }
   );
-  
-  // Получаем подходящий текст для статуса
+
   const getStatusText = () => {
-    switch(status) {
-      case 'approved': return 'Одобрена';
-      case 'rejected': return 'Отклонена';
+    switch (request) {
+      case request.terminated: return 'Отклонена';
+      case !request.terminated && request.is_confirmed: return 'Одобрена';
+      case !request.terminated && !request.is_confirmed: return 'На рассмотрении';
       default: return 'На рассмотрении';
     }
   };
+
+  const getStatusStyle = () => {
+    switch (request) {
+      case request.terminated: return statusColors['rejected'];
+      case !request.terminated && request.is_confirmed: return statusColors['approved'];
+      case !request.terminated && !request.is_confirmed: return statusColors['pending'];
+      default: return statusColors['pending'];
+    }
+  }
 
   return (
     <View style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>
-          {request.type === 'group' ? 'Заявка на групповое занятие' : 'Заявка на индивидуальное занятие'}
+          Заявка на индивидуальное занятие
         </Text>
         <View style={[
-          styles.statusBadge, 
-          {backgroundColor: statusStyle.background}
+          styles.statusBadge,
+          {backgroundColor: getStatusStyle().background}
         ]}>
-          <Ionicons name={statusStyle.icon} size={16} color={statusStyle.text} />
-          <Text style={[styles.statusText, {color: statusStyle.text}]}>
+          <Ionicons name={getStatusStyle().icon} size={16} color={getStatusStyle().text} />
+          <Text style={[getStatusStyle().statusText, {color: getStatusStyle().text}]}>
             {getStatusText()}
           </Text>
         </View>
       </View>
       
       <View style={styles.infoContainer}>
-        {request.groupName && (
-          <View style={styles.infoRow}>
-            <Text style={styles.label}>Группа:</Text>
-            <Text style={styles.value}>{request.groupName}</Text>
-          </View>
-        )}
-        
-        {request.teacherName && (
+        {request?.actual_teachers[0]?.user && (
           <View style={styles.infoRow}>
             <Text style={styles.label}>Преподаватель:</Text>
-            <Text style={styles.value}>{request.teacherName}</Text>
+            <Text style={styles.value}>
+              {request?.actual_teachers[0]?.user?.last_name} {request?.actual_teachers[0]?.user?.first_name} {request?.actual_teachers[0]?.user?.middle_name}
+            </Text>
           </View>
         )}
         
-        {request.danceStyle && (
+        {request?.lesson_type && (
           <View style={styles.infoRow}>
             <Text style={styles.label}>Стиль танца:</Text>
-            <Text style={styles.value}>{request.danceStyle}</Text>
+            <Text style={styles.value}>{request?.lesson_type?.dance_style?.name}</Text>
           </View>
         )}
         
@@ -85,17 +85,6 @@ const RequestCard = ({ request }) => {
           <Text style={styles.label}>Дата создания:</Text>
           <Text style={styles.value}>{formattedDate}</Text>
         </View>
-      </View>
-      
-      <View style={styles.footer}>
-        {request.comment && (
-          <Text style={styles.comment}>
-            <Text style={styles.commentLabel}>Комментарий: </Text>
-            {request.comment}
-          </Text>
-        )}
-        
-        <Ionicons name="chevron-forward" size={20} color="#999" />
       </View>
     </View>
   );
@@ -114,9 +103,9 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   header: {
-    flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
+    alignItems: 'flex-start',
+    gap: 10,
     marginBottom: 12,
     borderBottomWidth: 1,
     borderBottomColor: '#f0f0f0',

@@ -1,188 +1,271 @@
-import { View, Text, Modal, StyleSheet, TouchableOpacity, ScrollView, TouchableWithoutFeedback } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { useState, useEffect } from 'react';
+import {
+  View,
+  Text,
+  Modal,
+  StyleSheet,
+  TouchableOpacity,
+  ScrollView,
+  ActivityIndicator,
+} from 'react-native';
+import {Ionicons} from '@expo/vector-icons';
+import {useState, useEffect} from 'react';
+import {FlashList} from "@shopify/flash-list";
 
-const FilterTab = ({ title, isActive, onPress }) => (
-  <TouchableOpacity 
-    style={[styles.tab, isActive && styles.activeTab]} 
-    onPress={onPress}
-  >
-    <Text style={[styles.tabText, isActive && styles.activeTabText]}>
-      {title}
-    </Text>
-  </TouchableOpacity>
-);
+import FilterTab from "../FilterTab";
+import FilterItem from "../FilterItem";
 
 const defaultCategoryProps = {
   items: [],
   selectedItems: [],
   onItemSelect: () => {},
+  onEndReached: () => {},
+  loading: false,
+  hasMore: true
 };
 
-const GroupFilterModal = ({ 
-  visible = false, 
+const GroupFilterModal = ({
+  visible = false,
   onClose = () => {},
   onReset = () => {},
   onApply = () => {},
   filters = {
-    teachers: { ...defaultCategoryProps },
-    levels: { ...defaultCategoryProps },
-    groups: { ...defaultCategoryProps },
-    danceTypes: { ...defaultCategoryProps },
-    subscriptionTypes: { ...defaultCategoryProps },
+    teachers: {...defaultCategoryProps},
+    levels: {...defaultCategoryProps},
+    groups: {...defaultCategoryProps},
+    lessonTypes: {...defaultCategoryProps},
+    subscriptionTypes: {...defaultCategoryProps}
   }
 }) => {
   const [activeTab, setActiveTab] = useState('teachers');
+  const [refresh, setRefresh] = useState(0);
+  
+  // Локальное состояние для хранения выбранных элементов до применения фильтров
+  const [localSelectedTeachers, setLocalSelectedTeachers] = useState([]);
+  const [localSelectedLevels, setLocalSelectedLevels] = useState([]);
+  const [localSelectedGroups, setLocalSelectedGroups] = useState([]);
+  const [localSelectedDanceTypes, setLocalSelectedDanceTypes] = useState([]);
+  const [localSelectedSubscriptionTypes, setLocalSelectedSubscriptionTypes] = useState([]);
 
+  // Метки наличия соответствующих элементов для фильтров
   const hasTeachers = filters.teachers?.items?.length > 0;
   const hasLevels = filters.levels?.items?.length > 0;
   const hasGroups = filters.groups?.items?.length > 0;
-  const hasDanceTypes = filters.danceTypes?.items?.length > 0;
+  const hasLessonTypes = filters.lessonTypes?.items?.length > 0;
   const hasSubscriptionTypes = filters.subscriptionTypes?.items?.length > 0;
 
+  // Инициализация локальных состояний при открытии модального окна
   useEffect(() => {
-    if (hasTeachers) setActiveTab('teachers');
+    if (visible) {
+      setLocalSelectedTeachers([...filters.teachers.selectedItems]);
+      setLocalSelectedLevels([...filters.levels.selectedItems]);
+      setLocalSelectedGroups([...filters.groups.selectedItems]);
+      setLocalSelectedDanceTypes([...filters.lessonTypes.selectedItems]);
+      setLocalSelectedSubscriptionTypes([...filters.subscriptionTypes.selectedItems]);
+    }
+  }, [visible]);
+
+  // Определяем начальный активный таб при первом рендере
+  useEffect(() => {
+    if (hasLessonTypes) setActiveTab('lessonTypes');
+    else if (hasTeachers) setActiveTab('teachers');
     else if (hasLevels) setActiveTab('levels');
     else if (hasGroups) setActiveTab('groups');
-    else if (hasDanceTypes) setActiveTab('danceTypes');
     else if (hasSubscriptionTypes) setActiveTab('subscriptions');
-  }, []);
+  }, [hasTeachers, hasLevels, hasGroups, hasLessonTypes, hasSubscriptionTypes]);
 
-  const renderTeachersList = () => (
-    <ScrollView style={styles.contentContainer}>
-      {filters.teachers.items.map(teacher => (
-        <TouchableOpacity
-          key={teacher.id}
-          style={styles.itemContainer}
-          onPress={() => filters.teachers.onItemSelect(teacher.id)}
-        >
-          <Text style={styles.itemText}>
-            {teacher.firstName} {teacher.lastName}
-          </Text>
-          <View style={[
-            styles.checkbox,
-            filters.teachers.selectedItems.includes(teacher.id) && styles.checkboxSelected
-          ]}>
-            {filters.teachers.selectedItems.includes(teacher.id) && (
-              <Ionicons name="checkmark" size={16} color="white" />
-            )}
-          </View>
-        </TouchableOpacity>
-      ))}
-    </ScrollView>
+  const toggleLocalTeacher = (id) => {
+    setLocalSelectedTeachers(prev => 
+      prev.includes(id) ? prev.filter(t => t !== id) : [...prev, id]
+    );
+    setRefresh(prev => prev + 1);
+  };
+
+  const toggleLocalLevel = (id) => {
+    setLocalSelectedLevels(prev => 
+      prev.includes(id) ? prev.filter(l => l !== id) : [...prev, id]
+    );
+    setRefresh(prev => prev + 1);
+  };
+
+  const toggleLocalGroup = (id) => {
+    setLocalSelectedGroups(prev => 
+      prev.includes(id) ? prev.filter(g => g !== id) : [...prev, id]
+    );
+    setRefresh(prev => prev + 1);
+  };
+
+  const toggleLocalDanceType = (id) => {
+    setLocalSelectedDanceTypes(prev => 
+      prev.includes(id) ? prev.filter(d => d !== id) : [...prev, id]
+    );
+    setRefresh(prev => prev + 1);
+  };
+
+  const toggleLocalSubscriptionType = (id) => {
+    setLocalSelectedSubscriptionTypes(prev => 
+      prev.includes(id) ? prev.filter(s => s !== id) : [...prev, id]
+    );
+    setRefresh(prev => prev + 1);
+  };
+
+  const handleApply = () => {
+    onApply({
+      teachers: localSelectedTeachers,
+      levels: localSelectedLevels,
+      groups: localSelectedGroups,
+      lessonTypes: localSelectedDanceTypes,
+      subscriptionTypes: localSelectedSubscriptionTypes
+    });
+  };
+
+  const handleReset = () => {
+    setLocalSelectedTeachers([]);
+    setLocalSelectedLevels([]);
+    setLocalSelectedGroups([]);
+    setLocalSelectedDanceTypes([]);
+    setLocalSelectedSubscriptionTypes([]);
+    onReset();
+    setRefresh(prev => prev + 1);
+  };
+
+  const renderTeacherItem = ({item}) => (
+    <FilterItem
+      item={item}
+      isSelected={localSelectedTeachers.includes(item.id)}
+      onSelect={() => toggleLocalTeacher(item.id)}
+      textExtractor={(teacher) => `${teacher.user.last_name} ${teacher.user.first_name} ${teacher.user?.middle_name || ''}`}
+    />
   );
 
-  const renderLevelsList = () => (
-    <ScrollView style={styles.contentContainer}>
-      {filters.levels.items.map(level => (
-        <TouchableOpacity
-          key={level}
-          style={styles.itemContainer}
-          onPress={() => filters.levels.onItemSelect(level)}
-        >
-          <Text style={styles.itemText}>{level}</Text>
-          <View style={[
-            styles.checkbox,
-            filters.levels.selectedItems.includes(level) && styles.checkboxSelected
-          ]}>
-            {filters.levels.selectedItems.includes(level) && (
-              <Ionicons name="checkmark" size={16} color="white" />
-            )}
-          </View>
-        </TouchableOpacity>
-      ))}
-    </ScrollView>
+  const renderLevelItem = ({item}) => (
+    <FilterItem
+      item={item}
+      isSelected={localSelectedLevels.includes(item.id)}
+      onSelect={() => toggleLocalLevel(item.id)}
+      textExtractor={(level) => level.name}
+    />
   );
 
-  const renderGroupsList = () => (
-    <ScrollView style={styles.contentContainer}>
-      {filters.groups.items.map(group => (
-        <TouchableOpacity
-          key={group.id}
-          style={styles.itemContainer}
-          onPress={() => filters.groups.onItemSelect(group.id)}
-        >
-          <Text style={styles.itemText}>{group.name}</Text>
-          <View style={[
-            styles.checkbox,
-            filters.groups.selectedItems.includes(group.id) && styles.checkboxSelected
-          ]}>
-            {filters.groups.selectedItems.includes(group.id) && (
-              <Ionicons name="checkmark" size={16} color="white" />
-            )}
-          </View>
-        </TouchableOpacity>
-      ))}
-    </ScrollView>
+  const renderGroupItem = ({item}) => (
+    <FilterItem
+      item={item}
+      isSelected={localSelectedGroups.includes(item.id)}
+      onSelect={() => toggleLocalGroup(item.id)}
+      textExtractor={(group) => group.name}
+    />
   );
 
-  const renderDanceTypesList = () => (
-    <ScrollView style={styles.contentContainer}>
-      {filters.danceTypes.items.map(danceType => (
-        <TouchableOpacity
-          key={danceType.id}
-          style={styles.itemContainer}
-          onPress={() => filters.danceTypes.onItemSelect(danceType.id)}
-        >
-          <Text style={styles.itemText}>{danceType.name}</Text>
-          <View style={[
-            styles.checkbox,
-            filters.danceTypes.selectedItems.includes(danceType.id) && styles.checkboxSelected
-          ]}>
-            {filters.danceTypes.selectedItems.includes(danceType.id) && (
-              <Ionicons name="checkmark" size={16} color="white" />
-            )}
-          </View>
-        </TouchableOpacity>
-      ))}
-    </ScrollView>
+  const renderLessonTypeItem = ({item}) => (
+    <FilterItem
+      item={item}
+      isSelected={localSelectedDanceTypes.includes(item.id)}
+      onSelect={() => toggleLocalDanceType(item.id)}
+      textExtractor={(lessonType) => lessonType.dance_style.name}
+    />
   );
 
-  const renderSubscriptionTypesList = () => (
-    <ScrollView style={styles.contentContainer}>
-      {filters.subscriptionTypes.items.map(subType => (
-        <TouchableOpacity
-          key={subType.id}
-          style={styles.itemContainer}
-          onPress={() => filters.subscriptionTypes.onItemSelect(subType.id)}
-        >
-          <Text style={styles.itemText}>{subType.name}</Text>
-          <View style={[
-            styles.checkbox,
-            filters.subscriptionTypes.selectedItems.includes(subType.id) && styles.checkboxSelected
-          ]}>
-            {filters.subscriptionTypes.selectedItems.includes(subType.id) && (
-              <Ionicons name="checkmark" size={16} color="white" />
-            )}
-          </View>
-        </TouchableOpacity>
-      ))}
-    </ScrollView>
+  const renderSubscriptionTypeItem = ({item}) => (
+    <FilterItem
+      item={item}
+      isSelected={localSelectedSubscriptionTypes.includes(item.id)}
+      onSelect={() => toggleLocalSubscriptionType(item.id)}
+      textExtractor={(subType) => subType.name}
+    />
   );
 
-  const getActiveContent = () => {
+  const getActiveFilterData = () => {
     switch (activeTab) {
       case 'teachers':
-        return hasTeachers ? renderTeachersList() : null;
+        return {
+          data: filters.teachers.items,
+          renderItem: renderTeacherItem,
+          onEndReached: filters.teachers.onEndReached,
+          loading: filters.teachers.loading,
+          hasMore: filters.teachers.hasMore
+        };
       case 'levels':
-        return hasLevels ? renderLevelsList() : null;
+        return {
+          data: filters.levels.items,
+          renderItem: renderLevelItem,
+          onEndReached: filters.levels.onEndReached,
+          loading: filters.levels.loading,
+          hasMore: filters.levels.hasMore
+        };
       case 'groups':
-        return hasGroups ? renderGroupsList() : null;
-      case 'danceTypes':
-        return hasDanceTypes ? renderDanceTypesList() : null;
+        return {
+          data: filters.groups.items,
+          renderItem: renderGroupItem,
+          onEndReached: filters.groups.onEndReached,
+          loading: filters.groups.loading,
+          hasMore: filters.groups.hasMore
+        };
+      case 'lessonTypes':
+        return {
+          data: filters.lessonTypes.items,
+          renderItem: renderLessonTypeItem,
+          onEndReached: filters.lessonTypes.onEndReached,
+          loading: filters.lessonTypes.loading,
+          hasMore: filters.lessonTypes.hasMore
+        };
       case 'subscriptions':
-        return hasSubscriptionTypes ? renderSubscriptionTypesList() : null;
+        return {
+          data: filters.subscriptionTypes.items,
+          renderItem: renderSubscriptionTypeItem,
+          onEndReached: filters.subscriptionTypes.onEndReached,
+          loading: filters.subscriptionTypes.loading,
+          hasMore: filters.subscriptionTypes.hasMore
+        };
       default:
-        return null;
+        return {data: [], renderItem: null, onEndReached: null, loading: false, hasMore: false};
     }
   };
 
-  const hasAnyFilters = 
-    (filters.teachers?.selectedItems?.length > 0) || 
-    (filters.levels?.selectedItems?.length > 0) || 
-    (filters.groups?.selectedItems?.length > 0) ||
-    (filters.danceTypes?.selectedItems?.length > 0) ||
-    (filters.subscriptionTypes?.selectedItems?.length > 0);
+  const renderContent = () => {
+    const activeFilter = getActiveFilterData();
+    if (!activeFilter.data || activeFilter.data.length === 0) {
+      return (
+        <View style={styles.emptyContainer}>
+          <Text style={styles.emptyText}>Нет данных для отображения</Text>
+        </View>
+      );
+    }
+
+    return (
+      <FlashList
+        data={activeFilter.data}
+        estimatedItemSize={50}
+        renderItem={activeFilter.renderItem}
+        keyExtractor={(item) => item.id.toString()}
+        onEndReached={activeFilter.onEndReached}
+        onEndReachedThreshold={0.5}
+        showsVerticalScrollIndicator={false}
+        extraData={refresh}
+        ListFooterComponent={() => (
+          activeFilter.loading && activeFilter.hasMore ? (
+            <View style={styles.loadingFooter}>
+              <ActivityIndicator size="small" color="#d903e4"/>
+            </View>
+          ) : null
+        )}
+        contentContainerStyle={{paddingBottom: 10}}
+      />
+    );
+  };
+
+  const availableTabs = [
+    {id: 'teachers', title: 'Преподаватели', visible: hasTeachers},
+    {id: 'levels', title: 'Уровни', visible: hasLevels},
+    {id: 'groups', title: 'Группы', visible: hasGroups},
+    {id: 'lessonTypes', title: 'Стили танца', visible: hasLessonTypes},
+    {id: 'subscriptions', title: 'Абонементы', visible: hasSubscriptionTypes}
+  ].filter(tab => tab.visible);
+
+  const hasAnyLocalFilters =
+    (localSelectedTeachers.length > 0) ||
+    (localSelectedLevels.length > 0) ||
+    (localSelectedGroups.length > 0) ||
+    (localSelectedDanceTypes.length > 0) ||
+    (localSelectedSubscriptionTypes.length > 0);
 
   return (
     <Modal
@@ -190,83 +273,56 @@ const GroupFilterModal = ({
       transparent={true}
       visible={visible}
       onRequestClose={onClose}
+      statusBarTranslucent={true}
     >
-      <TouchableWithoutFeedback onPress={onClose}>
-        <View style={styles.modalContainer}>
-          <TouchableWithoutFeedback onPress={() => {}}>
-            <View style={styles.modalContent}>
-              <View style={styles.header}>
-                <Text style={styles.title}>Фильтры</Text>
-                <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-                  <Ionicons name="close" size={24} color="black" />
-                </TouchableOpacity>
-              </View>
+      <View style={styles.modalContainer}>
+        <View style={styles.modalContent}>
+          <View style={styles.header}>
+            <Text style={styles.title}>Фильтры</Text>
+            <TouchableOpacity onPress={onClose} style={styles.closeButton}>
+              <Ionicons name="close" size={24} color="black"/>
+            </TouchableOpacity>
+          </View>
 
-              <View style={styles.tabsContainer}>
-                {hasTeachers && (
-                  <FilterTab 
-                    title="Преподаватели" 
-                    isActive={activeTab === 'teachers'} 
-                    onPress={() => setActiveTab('teachers')}
-                  />
-                )}
-                {hasLevels && (
-                  <FilterTab 
-                    title="Уровни" 
-                    isActive={activeTab === 'levels'} 
-                    onPress={() => setActiveTab('levels')}
-                  />
-                )}
-                {hasGroups && (
-                  <FilterTab 
-                    title="Группы" 
-                    isActive={activeTab === 'groups'} 
-                    onPress={() => setActiveTab('groups')}
-                  />
-                )}
-              </View>
-              
-              {(hasDanceTypes || hasSubscriptionTypes) && (
-                <View style={styles.tabsContainer}>
-                  {hasDanceTypes && (
-                    <FilterTab 
-                      title="Виды танца" 
-                      isActive={activeTab === 'danceTypes'} 
-                      onPress={() => setActiveTab('danceTypes')}
-                    />
-                  )}
-                  {hasSubscriptionTypes && (
-                    <FilterTab 
-                      title="Абонементы" 
-                      isActive={activeTab === 'subscriptions'} 
-                      onPress={() => setActiveTab('subscriptions')}
-                    />
-                  )}
-                </View>
-              )}
-
-              {getActiveContent()}
-
-              <View style={styles.footer}>
-                {hasAnyFilters && (
-                  <TouchableOpacity 
-                    style={styles.resetButton} 
-                    onPress={onReset}
-                  >
-                    <Text style={styles.resetButtonText}>Сбросить</Text>
-                  </TouchableOpacity>
-                )}
-                <TouchableOpacity 
-                  style={styles.applyButton} 
-                  onPress={onApply}
-                >
-                  <Text style={styles.applyButtonText}>Применить</Text>
-                </TouchableOpacity>
-              </View>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.tabsScrollView}>
+            <View style={styles.tabsContainer}>
+              {availableTabs.map(tab => (
+                <FilterTab
+                  key={tab.id}
+                  title={tab.title}
+                  isActive={activeTab === tab.id}
+                  onPress={() => setActiveTab(tab.id)}
+                />
+              ))}
             </View>
-          </TouchableWithoutFeedback>
-        </View>   
-      </TouchableWithoutFeedback>
+          </ScrollView>
+
+          <View style={styles.separator}/>
+
+          <View style={styles.listContainer}>
+            {renderContent()}
+          </View>
+
+          <View style={styles.separator}/>
+
+          <View style={styles.footer}>
+            {hasAnyLocalFilters && (
+              <TouchableOpacity
+                style={styles.resetButton}
+                onPress={handleReset}
+              >
+                <Text style={styles.resetButtonText}>Сбросить</Text>
+              </TouchableOpacity>
+            )}
+            <TouchableOpacity
+              style={styles.applyButton}
+              onPress={handleApply}
+            >
+              <Text style={styles.applyButtonText}>Применить</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </View>
     </Modal>
   );
 };
@@ -275,6 +331,7 @@ const styles = StyleSheet.create({
   modalContainer: {
     flex: 1,
     justifyContent: 'flex-end',
+    margin: 0,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
   modalContent: {
@@ -282,107 +339,89 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     height: '80%',
-    padding: 20,
+    paddingTop: 20,
+    paddingBottom: 20,
+    display: 'flex',
+    flexDirection: 'column',
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 20,
+    paddingHorizontal: 20,
+    paddingBottom: 15,
   },
   title: {
-    fontSize: 20,
-    fontWeight: 'bold',
+    fontSize: 22,
     fontFamily: 'os-bold',
   },
   closeButton: {
     padding: 5,
   },
+  tabsScrollView: {
+    flexGrow: 0,
+    marginBottom: 10,
+  },
   tabsContainer: {
     flexDirection: 'row',
-    marginBottom: 10,
-    paddingBottom: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
+    paddingHorizontal: 20,
+    paddingVertical: 5,
   },
-  tab: {
+  separator: {
+    height: 1,
+    backgroundColor: '#f0f0f0',
+    width: '100%',
+  },
+  listContainer: {
     flex: 1,
-    paddingVertical: 10,
-    alignItems: 'center',
-  },
-  activeTab: {
-    borderBottomWidth: 2,
-    borderBottomColor: '#d903e4',
-  },
-  tabText: {
-    fontSize: 14,
-    color: '#666',
-    fontFamily: 'os-regular',
-  },
-  activeTabText: {
-    color: '#d903e4',
-    fontWeight: 'bold',
-  },
-  contentContainer: {
-    flex: 1,
-  },
-  itemContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: 5,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
-  },
-  itemText: {
-    fontSize: 16,
-    fontFamily: 'os-regular',
-  },
-  checkbox: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    borderWidth: 2,
-    borderColor: '#d903e4',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  checkboxSelected: {
-    backgroundColor: '#d903e4',
+    paddingVertical: 5,
   },
   footer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    paddingTop: 20,
-    borderTopWidth: 1,
-    borderTopColor: '#e0e0e0',
+    paddingHorizontal: 20,
+    paddingTop: 15,
+    paddingBottom: 15,
   },
   resetButton: {
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#d903e4',
+    paddingVertical: 14,
+    paddingHorizontal: 15,
   },
   resetButtonText: {
-    color: '#d903e4',
     fontSize: 16,
-    fontFamily: 'os-regular',
+    fontFamily: 'os-medium',
+    color: '#666',
   },
   applyButton: {
     flex: 1,
-    marginLeft: 10,
     backgroundColor: '#d903e4',
-    paddingVertical: 12,
-    borderRadius: 8,
+    paddingVertical: 15,
+    paddingHorizontal: 20,
+    borderRadius: 12,
     alignItems: 'center',
+    marginLeft: 15,
   },
   applyButtonText: {
-    color: 'white',
     fontSize: 16,
-    fontWeight: 'bold',
+    fontFamily: 'os-bold',
+    color: 'white',
+  },
+  loadingFooter: {
+    padding: 15,
+    alignItems: 'center',
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 40,
+    minHeight: 200,
+  },
+  emptyText: {
+    fontSize: 16,
     fontFamily: 'os-regular',
+    color: '#999',
+    textAlign: 'center',
   },
 });
 

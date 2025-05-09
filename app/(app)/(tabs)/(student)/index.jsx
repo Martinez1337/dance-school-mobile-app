@@ -1,119 +1,120 @@
-import {useState, useMemo} from 'react';
-import {View, Text, StyleSheet, TouchableOpacity, Modal, SafeAreaView, TextInput} from 'react-native';
+import React, {useState, useMemo, useEffect} from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  SafeAreaView,
+  TextInput,
+  ActivityIndicator,
+  RefreshControl
+} from 'react-native';
 import {FlashList} from "@shopify/flash-list";
-import {useRouter, Stack} from 'expo-router';
+import {router, Stack} from 'expo-router';
 import {Ionicons} from '@expo/vector-icons';
 
 import {DanceListItem} from '../../../../components';
 import {globalStyles} from '../../../../styles/globalStyles';
+import {apiRequest, handleApiError} from "../../../../util/apiService";
 
-const danceTypes = [
-  {
-    id: '1',
-    name: 'Аргентинское танго',
-    image: {uri: 'https://images.unsplash.com/photo-1545959570-a94084071b5d'},
-    description: 'Классический стиль аргентинского танго'
-  },
-  {
-    id: '2',
-    name: 'Милонга',
-    image: {uri: 'https://images.unsplash.com/photo-1516714819001-8ee7a13b71d7'},
-    description: 'Быстрый и ритмичный стиль танго'
-  },
-  {
-    id: '3',
-    name: 'Вальс-танго',
-    image: {uri: 'https://images.unsplash.com/photo-1508700929628-666bc8bd84ea'},
-    description: 'Танго в ритме вальса'
-  },
-  {
-    id: '4',
-    name: 'Танго нуэво',
-    image: {uri: 'https://images.unsplash.com/photo-1504609813442-a8924e83f76e'},
-    description: 'Современная интерпретация танго'
-  },
-  {
-    id: '5',
-    name: 'Электро-танго',
-    image: {uri: 'https://images.unsplash.com/photo-1508807526345-15e9b5f4eaff'},
-    description: 'Танго под электронную музыку'
-  },
-  {
-    id: '6',
-    name: 'Салонное танго',
-    image: {uri: 'https://images.unsplash.com/photo-1518834107812-67b0b7c58434'},
-    description: 'Элегантный социальный стиль танго'
+const fetchLessonTypes = async (isGroup) => {
+  try {
+    return await apiRequest({
+      method: 'POST',
+      url: '/lessonTypes/search/full-info',
+      data: {
+        is_group: isGroup,
+        terminated: false
+      }
+    });
+  } catch (error) {
+    handleApiError(error);
   }
-];
+}
 
 export default function StudentDashboard() {
+  const [lessonTypes, setLessonTypes] = useState([]);
   const [isGroupView, setIsGroupView] = useState(false);
-  const [modalVisible, setModalVisible] = useState(false);
-  const [selectedDance, setSelectedDance] = useState(null);
+
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+
   const [searchQuery, setSearchQuery] = useState('');
-  const router = useRouter();
+
+  useEffect(() => {
+    fetchLessonTypes(isGroupView)
+      .then((response) => {
+        setLessonTypes(response.lesson_types)
+        setLoading(false)
+      })
+  }, [isGroupView])
 
   // Фильтруем танцы по поисковому запросу
   const filteredDanceTypes = useMemo(() => {
-    if (!searchQuery.trim()) return danceTypes;
+    if (!searchQuery.trim()) return lessonTypes;
 
     const normalizedQuery = searchQuery.toLowerCase().trim();
-    return danceTypes.filter(dance =>
-      dance.name.toLowerCase().includes(normalizedQuery) ||
-      dance.description.toLowerCase().includes(normalizedQuery)
+    return lessonTypes.filter(lessonType =>
+      lessonType.dance_style.name.toLowerCase().includes(normalizedQuery) ||
+      lessonType.dance_style.description.toLowerCase().includes(normalizedQuery)
     );
-  }, [searchQuery]);
+  }, [searchQuery, lessonTypes]);
 
-  const renderItem = ({item}) => (
-    <DanceListItem item={item} onPress={() => {
-      setSelectedDance(item);
-      setModalVisible(true);
-    }}/>
-  );
+  if (loading) {
+    return (
+      <SafeAreaView style={globalStyles.loadingContainer}>
+        <ActivityIndicator size="small" color="#d903e4"/>
+      </SafeAreaView>
+    )
+  }
 
-  const handleClearSearch = () => {
-    setSearchQuery('');
-  };
+  const onRefreshHandler = async () => {
+    setRefreshing(true);
+    await fetchLessonTypes(isGroupView)
+      .then((response) => {
+        setLessonTypes(response.lesson_types)
+        setRefreshing(false);
+      })
+  }
 
-  // Функция для перехода на экран групповых занятий с выбранным танцем
-  const navigateToGroupSchedule = () => {
-    setModalVisible(false);
-    if (selectedDance) {
+  const navigateToSchedule = (pathname, dance) => {
+    if (dance) {
       router.push({
-        pathname: 'schedule-groups',
+        pathname: pathname,
         params: {
-          danceId: selectedDance.id,
-          danceName: selectedDance.name
+          danceId: dance.id
         }
       });
     } else {
-      router.push('schedule-groups');
+      router.push(pathname);
     }
-  };
-  
-  const navigateToMyRequests = () => {
-    router.push('/(app)/(tabs)/(student)/my-requests');
   };
 
   return (
     <SafeAreaView style={styles.container}>
-      <Stack.Screen 
+      <Stack.Screen
         options={{
           headerShown: true,
           headerLeft: () => (
-            <TouchableOpacity onPress={() => {}} style={styles.headerButtonLeft}>
-              <Ionicons name="people" size={24} color="#333" />
+            <TouchableOpacity
+              onPress={() => {
+                setIsGroupView(!isGroupView)
+              }}
+              style={styles.headerButtonLeft}
+            >
+              <Ionicons name={isGroupView ? "people" : "person"} size={24} color="#333"/>
             </TouchableOpacity>
           ),
           headerRight: () => (
-            <TouchableOpacity onPress={navigateToMyRequests} style={styles.headerButtonRight}>
-              <Ionicons name="document-text-outline" size={24} color="#333" />
+            <TouchableOpacity
+              onPress={() => router.push('/(app)/(tabs)/(student)/my-requests')}
+              style={styles.headerButtonRight}
+            >
+              <Ionicons name="document-text-outline" size={24} color="#333"/>
             </TouchableOpacity>
           ),
         }}
       />
-      
-      <Text style={styles.title}>Выберите стиль танца</Text>
 
       {/* Поисковая строка в стиле экрана events */}
       <View style={{flexDirection: "row", marginHorizontal: 10}}>
@@ -134,8 +135,17 @@ export default function StudentDashboard() {
 
       <FlashList
         data={filteredDanceTypes}
-        renderItem={renderItem}
         keyExtractor={item => item.id}
+        renderItem={({item}) => (
+          <DanceListItem item={item} onPress={() => {
+            if (isGroupView) {
+              navigateToSchedule('schedule-groups', item)
+            } else {
+              navigateToSchedule('schedule-slots', item)
+            }
+          }}/>
+        )}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefreshHandler}/>}
         estimatedItemSize={200}
         showsVerticalScrollIndicator={false}
         ListEmptyComponent={() => (
@@ -144,56 +154,6 @@ export default function StudentDashboard() {
           </View>
         )}
       />
-
-      <Modal
-        animationType="fade"
-        transparent={true}
-        visible={modalVisible}
-        onRequestClose={() => setModalVisible(false)}
-      >
-        <TouchableOpacity
-          style={styles.modalOverlay}
-          activeOpacity={1}
-          onPress={() => setModalVisible(false)}
-        >
-          <TouchableOpacity
-            activeOpacity={1}
-            onPress={(e) => e.stopPropagation()}
-            style={styles.modalContent}
-          >
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Выберите тип занятия</Text>
-              <TouchableOpacity
-                onPress={() => setModalVisible(false)}
-                style={styles.closeButton}
-              >
-                <Ionicons name="close" size={24} color="#333"/>
-              </TouchableOpacity>
-            </View>
-
-            <TouchableOpacity
-              style={styles.option}
-              onPress={() => {
-                setModalVisible(false);
-                router.push('schedule-slots');
-              }}
-            >
-              <Ionicons name="person-outline" size={24} color="#d903e4"/>
-              <Text style={styles.optionText}>Индивидуальное занятие</Text>
-            </TouchableOpacity>
-
-            <View style={styles.separator}/>
-
-            <TouchableOpacity
-              style={styles.option}
-              onPress={navigateToGroupSchedule}
-            >
-              <Ionicons name="people-outline" size={24} color="#d903e4"/>
-              <Text style={styles.optionText}>Групповое занятие</Text>
-            </TouchableOpacity>
-          </TouchableOpacity>
-        </TouchableOpacity>
-      </Modal>
     </SafeAreaView>
   );
 }
@@ -202,12 +162,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#fff',
-  },
-  title: {
-    fontSize: 20,
-    fontFamily: 'os-bold',
-    paddingVertical: 5,
-    marginLeft: 16,
   },
   emptyContainer: {
     flex: 1,
@@ -269,11 +223,9 @@ const styles = StyleSheet.create({
     marginHorizontal: 10,
   },
   headerButtonRight: {
-    marginRight: 5,
-    padding: 5,
+    marginRight: 5
   },
   headerButtonLeft: {
-    marginLeft: 5,
-    padding: 5
+    marginLeft: 5
   }
 });

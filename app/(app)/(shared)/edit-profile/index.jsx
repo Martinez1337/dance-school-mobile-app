@@ -9,20 +9,21 @@ import {useDispatch, useSelector} from "react-redux";
 import {editUserInfoValidationSchema, editPasswordValidationSchema} from '../../../../validation/validation';
 import {FormField} from '../../../../components';
 import {SelectionModal} from '../../../../components';
-import {apiRequest} from '../../../../util/apiService';
+import {apiRequest, handleApiError} from '../../../../util/apiService';
 import {updateUserField} from "../../../../redux/slices/userSlice";
 import {updateLevelField} from "../../../../redux/slices/levelSlice";
 
-const fetchLevels = async (setLevels) => {
-  const response = await apiRequest({
-    method: 'GET',
-    url: '/levels',
+const fetchLevels = async () => {
+  return await apiRequest({
+    method: 'POST',
+    url: '/levels/search',
     requiresAuth: false,
+    data: {
+      terminated: false
+    }
   }).catch(error => {
-    console.log(error);
+    handleApiError(error)
   });
-  console.log(`response: ${JSON.stringify(response)}`);
-  setLevels(response);
 };
 
 const EditProfileScreen = () => {
@@ -39,7 +40,7 @@ const EditProfileScreen = () => {
 
   useEffect(() => {
     if (role === "student") {
-      fetchLevels(setLevels);
+      fetchLevels().then((response) => setLevels(response.levels));
     }
   }, []);
 
@@ -92,9 +93,25 @@ const EditProfileScreen = () => {
         {text: 'Отмена', style: 'cancel'},
         {
           text: 'Изменить',
-          onPress: () => {
-            console.log('Changing password:', values);
-            setIsEditingPassword(false);
+          onPress: async () => {
+            try {
+              const patchResponse = await apiRequest({
+                method: 'PATCH',
+                url: role === 'student' ? `/students/${id}` : `/teachers/${id}`,
+                data: {
+                  old_password: values.oldPassword,
+                  new_password: values.newPassword
+                },
+              });
+              console.log(`patchResponse: ${JSON.stringify(patchResponse)}`);
+              dispatch(updateUserField(patchResponse.user))
+              if (role === 'student') {
+                dispatch(updateLevelField(patchResponse.level));
+              }
+            } catch (error) {
+              console.log(error)
+            }
+            router.back();
           },
         },
       ]

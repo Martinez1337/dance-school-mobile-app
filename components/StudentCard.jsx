@@ -11,7 +11,7 @@ const StudentCard = ({student, onDelete, isTeacher}) => {
     <View style={styles.card}>
       <View style={styles.content}>
         <Image
-          source={{uri: student.user.photo}}
+          source={{uri: student.user.photo_url}}
           style={styles.avatar}
           placeholder={require("../assets/images/user-profile-placeholder.jpg")}
           contentFit={'cover'}

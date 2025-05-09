@@ -15,7 +15,7 @@ import {Ionicons} from '@expo/vector-icons';
 
 import {ConfirmationModal, StudentCard, TeacherCard, TeacherProfileModal} from '../../../../components';
 import {apiRequest, handleApiError} from "../../../../util/apiService";
-import {setSession} from "../../../../redux/slices/sessionSlice";
+import {setSession, updateSessionField} from "../../../../redux/slices/sessionSlice";
 import {setUser} from "../../../../redux/slices/userSlice";
 import {setLevel} from "../../../../redux/slices/levelSlice";
 
@@ -56,6 +56,17 @@ const deleteStudentFromGroup = async (groupId, studentId) => {
   }
 }
 
+const joinGroup = async (groupId, studentId) => {
+  try {
+    await apiRequest({
+      method: 'POST',
+      url: `/students/groups/${studentId}/${groupId}`
+    })
+  } catch (error) {
+    handleApiError(error)
+  }
+}
+
 const GroupScreen = () => {
   const dispatch = useDispatch();
   const {id} = useLocalSearchParams();
@@ -70,6 +81,7 @@ const GroupScreen = () => {
   const [teacherProfileVisible, setTeacherProfileVisible] = useState(false);
   const [selectedTeacher, setSelectedTeacher] = useState(null);
   const [isLeaveConfirmVisible, setIsLeaveConfirmVisible] = useState(false);
+  const [isRollInConfirmVisible, setIsRollInConfirmVisible] = useState(false);
 
   useEffect(() => {
     setRole(userRole)
@@ -91,7 +103,9 @@ const GroupScreen = () => {
     )
   }
 
-  const isUserInGroup = group.students.some(student => student.id === userId)
+  const isUserInGroup = group.students.some(student => student.id === userId);
+  const hasValidSubscription = group?.fitting_subscriptions?.length > 0;
+  console.log('hasValidSubscription', hasValidSubscription)
 
   const handleDeleteStudent = (student) => {
     setStudentToDelete(student);
@@ -127,27 +141,42 @@ const GroupScreen = () => {
     setTeacherProfileVisible(true);
   };
 
-  const confirmLeaveGroup = async () => {
+  const handleGoToSubscriptions = () => {
+    router.push('/(app)/(shared)/subscriptions');
+  };
+
+  const confirmActionInGroup = async (action) => {
     console.log('Выход из группы:', id);
 
     setIsLoading(true)
-    await deleteStudentFromGroup(group.id, userId)
+    if (action === 'join') {
+      await joinGroup(group.id, userId);
+    } else {
+      await deleteStudentFromGroup(group.id, userId)
+    }
     await fetchUserInfo()
       .then((response) => {
-        dispatch(setSession(response))
-        dispatch(setUser(response.user))
-        if (response.level) {
-          dispatch(setLevel(response.level))
-        }
+        dispatch(updateSessionField({groups: response.groups}))
       })
-    setIsLeaveConfirmVisible(false)
 
-    // Показываем уведомление
-    Alert.alert(
-      "Успешно",
-      "Вы вышли из группы",
-      [{text: "OK"}]
-    );
+    if (action === 'join') {
+      setIsRollInConfirmVisible(false);
+      // Показываем уведомление
+      Alert.alert(
+        "Успешно",
+        "Вы вступили в группу",
+        [{text: "OK"}]
+      );
+    } else {
+      setIsLeaveConfirmVisible(false);
+      // Показываем уведомление
+      Alert.alert(
+        "Успешно",
+        "Вы вышли из группы",
+        [{text: "OK"}]
+      );
+    }
+
     router.back();
   };
 
@@ -219,7 +248,27 @@ const GroupScreen = () => {
               style={styles.leaveButton}
               onPress={() => setIsLeaveConfirmVisible(true)}
             >
-              <Text style={styles.leaveButtonText}>Выйти из группы</Text>
+              <Text style={styles.buttonText}>Выйти из группы</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+        {!isUserInGroup && role === "student" && hasValidSubscription && (
+          <View style={styles.buttonContainer}>
+            <TouchableOpacity
+              style={styles.rollInButton}
+              onPress={() => setIsRollInConfirmVisible(true)}
+            >
+              <Text style={styles.buttonText}>Вступить в группу</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+        {!isUserInGroup && !hasValidSubscription && role === 'student' && (
+          <View style={styles.buttonContainer}>
+            <TouchableOpacity
+              style={styles.goToSubsButton}
+              onPress={handleGoToSubscriptions}
+            >
+              <Text style={styles.buttonText}>Приобрести абонемент</Text>
             </TouchableOpacity>
           </View>
         )}
@@ -230,7 +279,7 @@ const GroupScreen = () => {
         onClose={async () => await setIsConfirmationVisible(false)}
         onConfirm={handleConfirmDelete}
         title="Удалить ученика?"
-        message={`Вы уверены, что хотите удалить ${studentToDelete?.user.first_name} ${studentToDelete?.user.last_name} из группы?`}
+        message={`Вы уверены, что хотите удалить ученика ${studentToDelete?.user.first_name} ${studentToDelete?.user.last_name} из группы?`}
         confirmText="Удалить"
         cancelText="Отменить"
       />
@@ -238,10 +287,20 @@ const GroupScreen = () => {
       <ConfirmationModal
         visible={isLeaveConfirmVisible}
         onClose={async () => await setIsLeaveConfirmVisible(false)}
-        onConfirm={confirmLeaveGroup}
+        onConfirm={() => confirmActionInGroup('leave')}
         title="Выход из группы"
         message="Вы уверены, что хотите выйти из этой группы?"
         confirmText="Выйти"
+        cancelText="Отменить"
+      />
+
+      <ConfirmationModal
+        visible={isRollInConfirmVisible}
+        onClose={async () => await setIsRollInConfirmVisible(false)}
+        onConfirm={() => confirmActionInGroup('join')}
+        title="Вступление в группу"
+        message="Вы уверены, что хотите вступить в группу?"
+        confirmText="Да"
         cancelText="Отменить"
       />
 
@@ -310,7 +369,19 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     alignItems: 'center',
   },
-  leaveButtonText: {
+  rollInButton: {
+    backgroundColor: '#4CAF50',
+    paddingVertical: 16,
+    borderRadius: 12,
+    alignItems: 'center',
+  },
+  goToSubsButton: {
+    backgroundColor: '#d903e4',
+    paddingVertical: 16,
+    borderRadius: 12,
+    alignItems: 'center',
+  },
+  buttonText: {
     color: 'white',
     fontSize: 16,
     fontWeight: 'bold',

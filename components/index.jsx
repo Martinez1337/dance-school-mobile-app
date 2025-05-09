@@ -3,7 +3,7 @@ import CreateActionModal from "./modals/CreateActionModal";
 import CustomCalendar from "./CustomCalendar";
 import DanceListItem from "./DanceListItem";
 import EventListItem from "./EventListItem";
-import { FormField } from './FormField';
+import {FormField} from './FormField';
 import GroupFilterModal from "./modals/GroupFilterModal";
 import LessonListItem from "./LessonListItem";
 import RequestCard from "./RequestCard";
@@ -11,6 +11,7 @@ import SearchTagList from "./SearchTagList";
 import SlotCard from "./SlotCard";
 import SlotInfoModal from "./modals/SlotInfoModal";
 import SubscriptionCard from "./SubscriptionCard";
+import SubscriptionTemplateCard from "./SubscriptionTemplateCard";
 import TeacherFilterModal from "./modals/TeacherFilterModal";
 import TeacherProfileModal from "./modals/TeacherProfileModal";
 import ScrollIndicator from './ScrollIndicator';
@@ -20,6 +21,8 @@ import StudentCard from './StudentCard';
 import TeacherCard from './TeacherCard';
 import SubscriptionSelectionModal from "./modals/SubscriptionSelectionModal";
 import TimeSlotCard from "./TimeSlotCard";
+import LessonsList from "./LessonsList";
+
 export {
   ConfirmationModal,
   CreateActionModal,
@@ -36,11 +39,13 @@ export {
   SlotCard,
   SlotInfoModal,
   SubscriptionCard,
+  SubscriptionTemplateCard,
   StudentCard,
   TeacherCard,
   TeacherFilterModal,
   TeacherProfileModal,
   ScrollIndicator,
   SubscriptionSelectionModal,
-  TimeSlotCard
+  TimeSlotCard,
+  LessonsList
 }

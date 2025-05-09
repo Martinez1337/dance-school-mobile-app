@@ -4,10 +4,16 @@ import { Image } from 'expo-image';
 const DanceListItem = ({ item, onPress }) => (
   <TouchableOpacity style={styles.card} onPress={onPress}>
     <View style={styles.cardContent}>
-      <Image source={item.image} style={styles.image} />
+      <Image
+        source={item.dance_style.photo_url}
+        style={styles.image}
+        placeholder={require("../assets/images/placeholder-image.png")}
+        focusable={false}
+        contentFit={'cover'}
+      />
       <View style={styles.textContainer}>
-        <Text style={styles.cardTitle}>{item.name}</Text>
-        <Text style={styles.cardDescription}>{item.description}</Text>
+        <Text style={styles.cardTitle}>{item.dance_style.name}</Text>
+        <Text style={styles.cardDescription}>{item.dance_style.description}</Text>
       </View>
     </View>
   </TouchableOpacity>

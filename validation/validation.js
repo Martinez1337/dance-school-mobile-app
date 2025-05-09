@@ -37,7 +37,7 @@ export const editUserInfoValidationSchema = Yup.object().shape({
     .required('Фамилия обязательна')
     .min(2, 'Фамилия должна содержать минимум 2 символа'),
   middle_name: Yup.string()
-    .min(2, 'Отчество должно содержать минимум 2 символа'),
+    .min(2, 'Отчество должно содержать минимум 2 символа').nullable(),
   email: Yup.string()
     .required('Email обязателен')
     .matches(emailRegExp, 'Некорректный email'),
@@ -45,7 +45,7 @@ export const editUserInfoValidationSchema = Yup.object().shape({
     .required('Номер телефона обязателен')
     .matches(phoneRegExp, 'Номер телефона должен быть в формате +7XXXXXXXXXX'),
   description: Yup.string()
-    .max(500, 'Описание не должно превышать 500 символов'),
+    .max(500, 'Описание не должно превышать 500 символов').nullable(),
 });
 
 export const editPasswordValidationSchema = Yup.object().shape({

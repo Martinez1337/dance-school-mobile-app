@@ -17,31 +17,29 @@ import {sortEventData} from "../../../util/sortData";
 import {apiRequest, handleApiError} from "../../../util/apiService";
 import {useFocusEffect} from "expo-router";
 
-const fetchEventTypes = async (setEventTypes) => {
+const fetchEventTypes = async () => {
   try {
-    const response = await apiRequest({
+    return await apiRequest({
       method: 'POST',
       url: '/eventTypes/search',
       data: {
         terminated: false
       }
     })
-    setEventTypes(addValuesToEventTypes(response.event_types));
   } catch (error) {
     handleApiError(error)
   }
 };
 
-const fetchEvents = async (setEventTypes) => {
+const fetchEvents = async () => {
   try {
-    const response = await apiRequest({
+    return await apiRequest({
       method: 'POST',
       url: '/events/search/full-info',
       data: {
         terminated: false
       }
     })
-    setEventTypes(response.events);
   } catch (error) {
     handleApiError(error)
   }
@@ -59,9 +57,9 @@ const addValuesToEventTypes = (eventTypeList) => {
 
 const EventsTab = () => {
   const [eventTypeList, setEventTypeList] = useState([]);
-  const [eventList, setEventList] = useState([])
+  const [eventList, setEventList] = useState([]);
 
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
   const [searchText, setSearchText] = useState("");
@@ -69,21 +67,25 @@ const EventsTab = () => {
 
   useFocusEffect(
     useCallback(() => {
-      fetchEventTypes(setEventTypeList)
+      fetchEventTypes()
+        .then((response) => setEventTypeList(addValuesToEventTypes(response.event_types)))
     }, [])
   );
 
   useEffect(() => {
     if (eventTypeList && eventTypeList.length > 0) {
-      fetchEvents(setEventList).then(() => {
-        setLoading(false)
-      })
+      fetchEvents()
+        .then((response) => {
+          setEventList(response.events);
+          setLoading(false)
+        })
     }
   }, [eventTypeList]);
 
   const onRefreshHandler = async () => {
     setRefreshing(true);
-    await fetchEventTypes(setEventTypeList);
+    await fetchEventTypes()
+      .then((response) => setEventTypeList(addValuesToEventTypes(response.event_types)))
     setRefreshing(false);
   }
 

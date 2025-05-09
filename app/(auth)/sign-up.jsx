@@ -17,20 +17,19 @@ const isFormValid = (isValid, touched) => {
 
 const onSubmitHandler = async (values) => {
   try {
-    const requestBody = {
-      first_name: values.firstName,
-      last_name: values.lastName,
-      middle_name: values.middleName,
-      email: values.email,
-      phone_number: values.phoneNumber,
-      description: values.description,
-      level_id: values.level,
-      password: values.password,
-    }
     const response = await apiRequest({
       method: 'POST',
       url: '/auth/register',
-      data: requestBody,
+      data: {
+        first_name: values.firstName,
+        last_name: values.lastName,
+        middle_name: values.middleName,
+        email: values.email,
+        phone_number: values.phoneNumber,
+        description: values.description,
+        level_id: values.level,
+        password: values.password,
+      },
       requiresAuth: false,
     });
     Alert.alert("Регистрация", "Вы успешно зарегистрировались!", [{text: "OK"}]);
@@ -41,18 +40,16 @@ const onSubmitHandler = async (values) => {
   }
 }
 
-const fetchLevels = async (setLevels, setSelectedLevel) => {
+const fetchLevels = async () => {
   try {
-    const response = await apiRequest({
-      method: 'GET',
-      url: '/levels',
+    return await apiRequest({
+      method: 'POST',
+      url: '/levels/search',
       requiresAuth: false,
-    }).catch(error => {
-      console.log(error);
-    });
-    console.log(`fetched levels: ${JSON.stringify(response)}`);
-    setLevels(response);
-    setSelectedLevel(response[0].id);
+      data: {
+        terminated: false
+      }
+    })
   } catch (error) {
     handleApiError(error)
   }
@@ -64,7 +61,10 @@ const SignUp = () => {
   const [levels, setLevels] = useState([]);
 
   useEffect(() => {
-    fetchLevels(setLevels, setSelectedLevel);
+    fetchLevels().then((response) => {
+      setLevels(response.levels);
+      setSelectedLevel(response.levels[0].id);
+    });
   }, []);
 
   const getSelectedLevelName = () => {

@@ -34,24 +34,32 @@ const SlotInfoModal = ({
               
               <View style={styles.slotInfo}>
                 <Text style={styles.dateTime}>
-                  {format(parseISO(slot.startTime), 'dd MMMM yyyy', { locale: ru })}
+                  {format(parseISO(slot.start_time), 'dd MMMM yyyy', { locale: ru })}
                 </Text>
                 <Text style={styles.timeRange}>
-                  {`${format(parseISO(slot.startTime), 'HH:mm')} - ${format(parseISO(slot.endTime), 'HH:mm')}`}
+                  {`${format(parseISO(slot.start_time), 'HH:mm')} - ${format(parseISO(slot.finish_time), 'HH:mm')}`}
                 </Text>
-                <Text style={styles.danceType}>{slot.danceType}</Text>
+                {/*<Text style={styles.danceType}>{slot.danceType}</Text>*/}
               </View>
 
               <View style={styles.teacherSection}>
                 <Text style={styles.sectionTitle}>Преподаватель</Text>
                 <TouchableOpacity 
                   style={styles.teacherInfo}
-                  onPress={() => onTeacherPress && onTeacherPress(slot.teacherName)}
+                  onPress={() => onTeacherPress && onTeacherPress(slot.teacher?.id)}
                   activeOpacity={0.7}
                 >
-                  <Image source={slot.teacherImage} style={styles.teacherImage} />
+                  <Image
+                    source={slot.teacher?.user?.photo_url}
+                    style={styles.teacherImage}
+                    placeholder={require("../../assets/images/user-profile-placeholder.jpg")}
+                    contentFit={'cover'}
+                    placeholderContentFit={"cover"}
+                  />
                   <View style={styles.teacherNameContainer}>
-                    <Text style={styles.teacherName}>{slot.teacherName}</Text>
+                    <Text style={styles.teacherName}>
+                      {slot?.teacher?.user?.last_name} {slot?.teacher?.user?.first_name} {slot?.teacher?.user?.middle_name}
+                    </Text>
                     <Text style={styles.viewProfileText}>Посмотреть профиль</Text>
                   </View>
                 </TouchableOpacity>

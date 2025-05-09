@@ -92,9 +92,29 @@ const handleApiError = (error) => {
   Alert.alert('Ошибка', error.message, [{ text: 'OK' }]);
 };
 
+const createPaginatedFetcher = ({url, defaultParams = {}} = {}) => {
+  return async (page = 0, limit = 20, additionalParams = {}) => {
+    try {
+      const offset = page * limit;
+      return await apiRequest({
+        method: 'POST',
+        url: `${url}?order_by=created_at&desc=true&offset=${offset}&limit=${limit}`,
+        data: {
+          ...defaultParams,
+          ...additionalParams
+        }
+      });
+    } catch (error) {
+      handleApiError(error);
+      return null;
+    }
+  };
+};
+
 export {
   apiRequest,
   login,
   logout,
-  handleApiError
+  handleApiError,
+  createPaginatedFetcher
 };

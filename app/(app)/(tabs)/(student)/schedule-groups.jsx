@@ -1,127 +1,193 @@
-import {useEffect, useState, useMemo} from "react";
-import {SafeAreaView, Text, StyleSheet, View, TouchableOpacity} from 'react-native';
+import React, {useCallback, useEffect, useState} from "react";
+import {SafeAreaView, Text, StyleSheet, View, TouchableOpacity, ActivityIndicator} from 'react-native';
 import {format, isAfter, parseISO} from "date-fns";
-import {ru} from "date-fns/locale";
-import {useRouter, useLocalSearchParams, router} from 'expo-router';
+import {useLocalSearchParams, router} from 'expo-router';
 import {Stack} from 'expo-router';
 import {Ionicons} from '@expo/vector-icons';
-import {FlashList} from '@shopify/flash-list';
+import {formatInTimeZone} from "date-fns-tz";
+import {ru} from "date-fns/locale";
 
-import {CustomCalendar, LessonListItem, GroupFilterModal} from '../../../../components';
+import {CustomCalendar, GroupFilterModal, LessonsList} from '../../../../components';
+import {createPaginatedFetcher} from "../../../../util/apiService";
+import {globalStyles} from "../../../../styles/globalStyles";
+import {usePaginatedData, useFilters} from "../../../../util/hooks";
+import {getDatesMonthInterval} from "../../../../util/dates";
 
-import lessons from '../../../../scratch-data/lessons.json';
-import groups from '../../../../scratch-data/groups.json';
-import users from '../../../../scratch-data/users.json';
-import subscriptionTemplates from "../../../../scratch-data/subscription-templates.json";
-
-const uniqueLevels = [...new Set(groups.map(group => group.level))].filter(Boolean);
-const teachers = users.filter(user => user.role === 'Teacher');
-
-const lessonsData = lessons
-  .filter(lesson => lesson.lessonType === "Group")
-  .map(lesson => {
-    const group = groups.find(group => group.id === lesson.groupId);
-    const classroom = require('../../../../scratch-data/classrooms.json').find(classroom => classroom.id === lesson.classroomId);
-    const teacher = teachers.find(teacher => teacher.id === lesson.teacherId);
-    return {
-      ...lesson,
-      level: group?.level || 'Не указан',
-      groupName: group?.name || 'Не указана',
-      classroomName: classroom?.name || 'Не указана',
-      teacherId: teacher?.id,
-      groupId: group?.id,
-    };
-  });
-
-const danceTypes = [
-  {
-    id: '1',
-    name: 'Аргентинское танго',
-    image: {uri: 'https://images.unsplash.com/photo-1545959570-a94084071b5d'},
-    description: 'Классический стиль аргентинского танго'
-  },
-  {
-    id: '2',
-    name: 'Милонга',
-    image: {uri: 'https://images.unsplash.com/photo-1516714819001-8ee7a13b71d7'},
-    description: 'Быстрый и ритмичный стиль танго'
-  },
-  {
-    id: '3',
-    name: 'Вальс-танго',
-    image: {uri: 'https://images.unsplash.com/photo-1508700929628-666bc8bd84ea'},
-    description: 'Танго в ритме вальса'
-  },
-  {
-    id: '4',
-    name: 'Танго нуэво',
-    image: {uri: 'https://images.unsplash.com/photo-1504609813442-a8924e83f76e'},
-    description: 'Современная интерпретация танго'
-  },
-  {
-    id: '5',
-    name: 'Электро-танго',
-    image: {uri: 'https://images.unsplash.com/photo-1508807526345-15e9b5f4eaff'},
-    description: 'Танго под электронную музыку'
-  },
-  {
-    id: '6',
-    name: 'Салонное танго',
-    image: {uri: 'https://images.unsplash.com/photo-1518834107812-67b0b7c58434'},
-    description: 'Элегантный социальный стиль танго'
+const fetchLevels = createPaginatedFetcher({
+  url: '/levels/search',
+  defaultParams: {
+    terminated: false
   }
-];
+});
 
-const subscriptionTypes = subscriptionTemplates.map(template => ({
-  id: template.id,
-  name: template.name,
-  lessonType: template.lessonType
-}));
+const fetchTeachers = createPaginatedFetcher({
+  url: '/teachers/search/full-info',
+  defaultParams: {
+    terminated: false
+  }
+});
 
-export default function ScheduleGroups() {
-  const router = useRouter();
+const fetchGroups = createPaginatedFetcher({
+  url: '/groups/search',
+  defaultParams: {
+    terminated: false
+  }
+});
+
+const fetchSubTemplates = createPaginatedFetcher({
+  url: '/subscriptionTemplates/search',
+  defaultParams: {
+    is_expired: false
+  }
+});
+
+const fetchLessonTypes = createPaginatedFetcher({
+  url: '/lessonTypes/search/full-info',
+  defaultParams: {
+    is_group: true,
+    terminated: false
+  }
+});
+
+const fetchGroupLessons = createPaginatedFetcher({
+  url: '/lessons/search/group',
+  defaultParams: {
+    is_group: true,
+    in_group: false,
+    terminated: false
+  }
+});
+
+const ScheduleGroups = () => {
   const params = useLocalSearchParams();
+  const filters = useFilters();
+  const [loading, setLoading] = useState(true);
+
+  const lessons = usePaginatedData(fetchGroupLessons, 'lessons');
+  const teachers = usePaginatedData(fetchTeachers, 'teachers');
+  const levels = usePaginatedData(fetchLevels, 'levels');
+  const groups = usePaginatedData(fetchGroups, 'groups');
+  const lessonTypes = usePaginatedData(fetchLessonTypes, 'lesson_types');
+  const subTemplates = usePaginatedData(fetchSubTemplates, 'subscription_templates');
+
   const [selectedDate, setSelectedDate] = useState(format(new Date(), 'yyyy-MM-dd'));
   const [markedDates, setMarkedDates] = useState({});
+  const [filteredLessons, setFilteredLessons] = useState([]);
   const [filterModalVisible, setFilterModalVisible] = useState(false);
-  const [selectedTeachers, setSelectedTeachers] = useState([]);
-  const [selectedLevels, setSelectedLevels] = useState([]);
-  const [selectedGroups, setSelectedGroups] = useState([]);
-  const [selectedDanceTypes, setSelectedDanceTypes] = useState([]);
-  const [selectedSubscriptionTypes, setSelectedSubscriptionTypes] = useState([]);
 
+  // Загрузка начальных данных
   useEffect(() => {
-    if (params.danceId) {
-      const danceExists = danceTypes.some(dance => dance.id === params.danceId);
-      if (danceExists) {
-        setSelectedDanceTypes([params.danceId]);
-      }
-    }
-  }, [params.danceId]);
+    const fetchInitialData = async () => {
+      const {dateFrom, dateTo} = getDatesMonthInterval(selectedDate);
 
-  useEffect(() => {
-    const marks = {};
-    lessonsData.forEach(lesson => {
-      const date = format(parseISO(lesson.startTime), 'yyyy-MM-dd', {locale: ru});
-      if (isAfter(parseISO(lesson.startTime), new Date())) {
-        marks[date] = {marked: true, dotColor: '#d903e4'};
-      }
-    });
-    setMarkedDates(marks);
+      await Promise.all([
+        lessons.loadMoreAsync({additionalParams: {
+            date_from: dateFrom,
+            date_to: dateTo,
+            lesson_type_ids: params?.danceId ? [params.danceId] : undefined
+          }
+        }),
+        teachers.loadMore(),
+        levels.loadMore(),
+        groups.loadMore(),
+        lessonTypes.loadMore(),
+        subTemplates.loadMore(),
+      ]);
+
+      setLoading(false);
+    };
+
+    fetchInitialData();
   }, []);
 
-  const filteredLessons = useMemo(() => {
-    return lessonsData.filter(lesson => {
-      const dateMatches = format(parseISO(lesson.startTime), 'yyyy-MM-dd') === selectedDate;
-      const teacherMatches = selectedTeachers.length === 0 || selectedTeachers.includes(lesson.teacherId);
-      const levelMatches = selectedLevels.length === 0 || selectedLevels.includes(lesson.level);
-      const groupMatches = selectedGroups.length === 0 || selectedGroups.includes(lesson.groupId);
-      const danceTypeMatches = selectedDanceTypes.length === 0 || selectedDanceTypes.includes(lesson.danceTypeId || '');
-      const subscriptionTypeMatches = selectedSubscriptionTypes.length === 0 || selectedSubscriptionTypes.includes(lesson.subscriptionTypeId || '');
+  // Установка фильтра по типу танца, если он указан в параметрах маршрута
+  useEffect(() => {
+    if (params.danceId && lessonTypes.state.data.some(lt => lt.id === params.danceId)) {
+      filters.toggleDanceType(params.danceId);
+    }
+  }, [params.danceId, lessonTypes.state]);
 
-      return dateMatches && teacherMatches && levelMatches && groupMatches && danceTypeMatches && subscriptionTypeMatches;
+  useEffect(() => {
+    if (!lessons.state.data) {
+      return;
+    }
+
+    const marks = {};
+    if (lessons.state.data.length >= 0) {
+      lessons.state.data.forEach(lesson => {
+        const date = format(parseISO(lesson.start_time), 'yyyy-MM-dd', {locale: ru});
+        if (isAfter(parseISO(lesson.start_time), new Date())) {
+          marks[date] = {marked: true, dotColor: "#d903e4"};
+        }
+      });
+
+      const filtered = lessons.state.data.filter(lesson =>
+        format(parseISO(lesson.start_time), 'yyyy-MM-dd') === selectedDate
+      );
+
+      setFilteredLessons(filtered);
+    }
+
+    marks[selectedDate] = {
+      ...marks[selectedDate],
+      selected: true,
+      marked: false,
+    };
+
+    setMarkedDates(marks);
+  }, [selectedDate, lessons.state]);
+
+  const handleMonthChange = useCallback(async (dateData) => {
+    const date = new Date(parseISO(dateData.dateString));
+    date.setUTCDate(1);
+
+    const dateString = formatInTimeZone(date, 'UTC', 'yyyy-MM-dd');
+    setSelectedDate(dateString);
+
+    const {dateFrom, dateTo} = getDatesMonthInterval(dateString);
+
+    await lessons.reset();
+
+    await lessons.loadMoreAsync({additionalParams: {
+        date_from: dateFrom,
+        date_to: dateTo,
+        teacher_ids: filters.selectedTeachers,
+        level_ids: filters.selectedLevels,
+        group_ids: filters.selectedGroups,
+        lesson_type_ids: filters.selectedDanceTypes,
+        subscription_template_ids: filters.selectedSubscriptionTypes
+      }});
+  }, [filters]);
+
+  // Обработчик применения фильтров
+  const handleApplyFilters = useCallback(async (newFilters) => {
+    setFilterModalVisible(false);
+
+    filters.setSelectedTeachers(newFilters.teachers);
+    filters.setSelectedLevels(newFilters.levels);
+    filters.setSelectedGroups(newFilters.groups);
+    filters.setSelectedDanceTypes(newFilters.lessonTypes);
+    filters.setSelectedSubscriptionTypes(newFilters.subscriptionTypes);
+
+    const date = new Date(parseISO(selectedDate));
+    date.setUTCDate(1);
+
+    const dateString = formatInTimeZone(date, 'UTC', 'yyyy-MM-dd');
+    const {dateFrom, dateTo} = getDatesMonthInterval(dateString);
+
+    await lessons.reset();
+    await lessons.loadMoreAsync({
+      additionalParams: {
+        date_from: dateFrom,
+        date_to: dateTo,
+        teacher_ids: newFilters.teachers,
+        level_ids: newFilters.levels,
+        group_ids: newFilters.groups,
+        lesson_type_ids: newFilters.lessonTypes,
+        subscription_template_ids: newFilters.subscriptionTypes
+      }
     });
-  }, [selectedDate, selectedTeachers, selectedLevels, selectedGroups, selectedDanceTypes, selectedSubscriptionTypes]);
+  }, [selectedDate, lessons, filters]);
 
   const handleLessonPress = (lesson) => {
     router.push({
@@ -130,94 +196,64 @@ export default function ScheduleGroups() {
     });
   };
 
-  const toggleTeacherSelection = (teacherId) => {
-    setSelectedTeachers(prev =>
-      prev.includes(teacherId)
-        ? prev.filter(id => id !== teacherId)
-        : [...prev, teacherId]
-    );
-  };
-
-  const toggleLevelSelection = (level) => {
-    setSelectedLevels(prev =>
-      prev.includes(level)
-        ? prev.filter(l => l !== level)
-        : [...prev, level]
-    );
-  };
-
-  const toggleGroupSelection = (groupId) => {
-    setSelectedGroups(prev =>
-      prev.includes(groupId)
-        ? prev.filter(id => id !== groupId)
-        : [...prev, groupId]
-    );
-  };
-
-  const toggleDanceTypeSelection = (danceTypeId) => {
-    setSelectedDanceTypes(prev =>
-      prev.includes(danceTypeId)
-        ? prev.filter(id => id !== danceTypeId)
-        : [...prev, danceTypeId]
-    );
-  };
-
-  const toggleSubscriptionTypeSelection = (subscriptionTypeId) => {
-    setSelectedSubscriptionTypes(prev =>
-      prev.includes(subscriptionTypeId)
-        ? prev.filter(id => id !== subscriptionTypeId)
-        : [...prev, subscriptionTypeId]
-    );
+  if (loading) {
+    return (
+      <SafeAreaView style={globalStyles.loadingContainer}>
+        <ActivityIndicator size="small" color="#d903e4"/>
+      </SafeAreaView>
+    )
   }
-
-  const resetFilters = () => {
-    setSelectedTeachers([]);
-    setSelectedLevels([]);
-    setSelectedGroups([]);
-    setSelectedDanceTypes([]);
-    setSelectedSubscriptionTypes([]);
-  };
 
   const filterData = {
     teachers: {
-      items: teachers,
-      selectedItems: selectedTeachers,
-      onItemSelect: toggleTeacherSelection
+      items: teachers.state.data,
+      selectedItems: filters.selectedTeachers,
+      onItemSelect: filters.toggleTeacher,
+      onEndReached: teachers.loadMore,
+      loading: teachers.state.loading,
+      hasMore: teachers.state.hasMore
     },
     levels: {
-      items: uniqueLevels,
-      selectedItems: selectedLevels,
-      onItemSelect: toggleLevelSelection
+      items: levels.state.data,
+      selectedItems: filters.selectedLevels,
+      onItemSelect: filters.toggleLevel,
+      onEndReached: levels.loadMore,
+      loading: levels.state.loading,
+      hasMore: levels.state.hasMore
     },
     groups: {
-      items: groups,
-      selectedItems: selectedGroups,
-      onItemSelect: toggleGroupSelection
+      items: groups.state.data,
+      selectedItems: filters.selectedGroups,
+      onItemSelect: filters.toggleGroup,
+      onEndReached: groups.loadMore,
+      loading: groups.state.loading,
+      hasMore: groups.state.hasMore
     },
-    danceTypes: {
-      items: danceTypes,
-      selectedItems: selectedDanceTypes,
-      onItemSelect: toggleDanceTypeSelection
+    lessonTypes: {
+      items: lessonTypes.state.data,
+      selectedItems: filters.selectedDanceTypes,
+      onItemSelect: filters.toggleDanceType,
+      onEndReached: lessonTypes.loadMore,
+      loading: lessonTypes.state.loading,
+      hasMore: lessonTypes.state.hasMore
     },
     subscriptionTypes: {
-      items: subscriptionTypes,
-      selectedItems: selectedSubscriptionTypes,
-      onItemSelect: toggleSubscriptionTypeSelection
+      items: subTemplates.state.data,
+      selectedItems: filters.selectedSubscriptionTypes,
+      onItemSelect: filters.toggleSubscriptionType,
+      onEndReached: subTemplates.loadMore,
+      loading: subTemplates.state.loading,
+      hasMore: subTemplates.state.hasMore
     }
   };
 
-  const totalFiltersCount = selectedTeachers.length + selectedLevels.length +
-    selectedGroups.length + selectedDanceTypes.length + selectedSubscriptionTypes.length;
+  const totalFiltersCount = filters.selectedTeachers.length + filters.selectedLevels.length +
+    filters.selectedGroups.length + filters.selectedDanceTypes.length + filters.selectedSubscriptionTypes.length;
 
   return (
     <SafeAreaView style={styles.container}>
       <Stack.Screen
         options={{
-          headerLeft: () => (
-            <TouchableOpacity onPress={() => router.back()}>
-              <Ionicons name="chevron-back" size={24} color="black" />
-            </TouchableOpacity>
-          ),
           headerRight: () => (
             <TouchableOpacity
               onPress={() => setFilterModalVisible(true)}
@@ -239,38 +275,38 @@ export default function ScheduleGroups() {
       />
 
       <CustomCalendar
-        selectedDate={selectedDate}
-        setSelectedDate={setSelectedDate}
+        onDayPress={(dateData) => setSelectedDate(dateData.dateString)}
+        onMonthChange={handleMonthChange}
         markedDates={markedDates}
       />
 
       <View style={styles.lessonContainer}>
-        {
-          <FlashList
-            data={filteredLessons}
-            keyExtractor={(item) => item.id.toString()}
-            estimatedItemSize={200}
-            renderItem={({item}) => (
-              <LessonListItem
-                item={item}
-                onPress={handleLessonPress}
-              />
-            )}
-            ListHeaderComponent={<View style={{height: 15}}/>}
-            ListEmptyComponent={() => (
-              <Text style={styles.noLessonsText}>
-                В этот день нет подходящих групповых занятий
-              </Text>
-            )}
-          />
-        }
+        <LessonsList
+          lessons={filteredLessons}
+          onLessonPress={handleLessonPress}
+          onEndReached={lessons.loadMore}
+          refreshing={lessons.state.loading}
+          onRefresh={async () => {
+            const {dateFrom, dateTo} = getDatesMonthInterval(selectedDate);
+            await lessons.reset();
+            await lessons.loadMoreAsync({additionalParams: {
+                date_from: dateFrom,
+                date_to: dateTo,
+                teacher_ids: filters.selectedTeachers,
+                level_ids: filters.selectedLevels,
+                group_ids: filters.selectedGroups,
+                lesson_type_ids: filters.selectedDanceTypes,
+                subscription_template_ids: filters.selectedSubscriptionTypes
+            }});
+          }}
+        />
       </View>
 
       <GroupFilterModal
         visible={filterModalVisible}
         onClose={() => setFilterModalVisible(false)}
-        onReset={resetFilters}
-        onApply={() => setFilterModalVisible(false)}
+        onReset={filters.resetFilters}
+        onApply={handleApplyFilters}
         filters={filterData}
       />
     </SafeAreaView>
@@ -323,4 +359,11 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     fontFamily: "os-regular",
   },
-}); 
+  loadingFooter: {
+    padding: 15,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+});
+
+export default ScheduleGroups;

@@ -8,9 +8,9 @@ import {useSelector} from "react-redux";
 import {LessonRequestCard, CreateActionModal} from '../../../../components';
 import {apiRequest, handleApiError} from "../../../../util/apiService";
 
-const fetchLessonRequests = async (id, setRequests) => {
+const fetchLessonRequests = async () => {
   try {
-    const response = await apiRequest({
+    return await apiRequest({
       method: 'POST',
       url: '/lessons/search/teacher',
       data: {
@@ -19,27 +19,25 @@ const fetchLessonRequests = async (id, setRequests) => {
         is_group: false,
       }
     });
-    setRequests(response.lessons);
   } catch (error) {
     handleApiError(error);
   }
 };
 
 const LessonRequestsScreen = () => {
-  const id = useSelector((state) => state.session.id);
   const [requests, setRequests] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
   const [isCreateModalVisible, setIsCreateModalVisible] = useState(false);
 
   useFocusEffect(
     useCallback(() => {
-      fetchLessonRequests(id, setRequests);
+      fetchLessonRequests().then(response => setRequests(response.lessons));
     }, [])
   )
 
   const onRefreshHandler = async () => {
     setRefreshing(true);
-    await fetchLessonRequests(id, setRequests);
+    await fetchLessonRequests().then(response => setRequests(response.lessons));
     setRefreshing(false);
   };
 

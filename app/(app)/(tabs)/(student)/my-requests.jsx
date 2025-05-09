@@ -4,17 +4,11 @@ import {Stack, useRouter} from 'expo-router';
 import {useSelector} from 'react-redux';
 import {RequestCard} from '../../../../components';
 import {Ionicons} from "@expo/vector-icons";
+import {apiRequest, handleApiError} from "../../../../util/apiService";
+import {FlashList} from "@shopify/flash-list";
 
 // Заглушка для тестирования
 const mockRequests = [
-  {
-    id: '1',
-    type: 'group',
-    status: 'pending',
-    groupName: 'Начинающие танго',
-    danceStyle: 'Аргентинское танго',
-    createdAt: '2024-05-01T10:00:00Z',
-  },
   {
     id: '2',
     type: 'individual',
@@ -22,66 +16,38 @@ const mockRequests = [
     teacherName: 'Петрова Анна',
     danceStyle: 'Вальс',
     createdAt: '2024-04-25T14:30:00Z',
-    comment: 'Заявка одобрена, ждем вас на занятии'
-  },
-  {
-    id: '3',
-    type: 'group',
-    status: 'rejected',
-    groupName: 'Продвинутый уровень',
-    danceStyle: 'Милонга',
-    createdAt: '2024-04-15T09:15:00Z',
-    comment: 'К сожалению, группа уже заполнена'
-  },
-  {
-    id: '4',
-    type: 'group',
-    status: 'pending',
-    groupName: 'Средний уровень',
-    danceStyle: 'Танго нуэво',
-    createdAt: '2024-05-02T16:45:00Z',
-  },
+  }
 ];
 
+const fetchLessonRequests = async () => {
+  try {
+    return await apiRequest({
+      method: 'POST',
+      url: '/lessons/search/student',
+      data: {
+        is_group: false,
+      }
+    });
+  } catch (error) {
+    handleApiError(error);
+  }
+};
+
 const MyRequestsScreen = () => {
-  const router = useRouter();
   const userId = useSelector(state => state.user?.id);
 
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Здесь будет запрос к API для получения заявок пользователя
-    // Пока используем заглушку
-    const fetchRequests = async () => {
-      try {
-        // Имитация задержки загрузки
-        setTimeout(() => {
-          setRequests(mockRequests);
-          setLoading(false);
-        }, 1000);
-      } catch (error) {
-        console.error('Ошибка при загрузке заявок:', error);
-        setLoading(false);
-      }
-    };
-
-    fetchRequests();
+    fetchLessonRequests().then(response => {
+      setRequests(response.lessons);
+      setLoading(false)
+    })
   }, [userId]);
 
   return (
     <SafeAreaView style={styles.container}>
-      <Stack.Screen
-        options={{
-          title: 'Мои заявки',
-          headerLeft: () => (
-            <TouchableOpacity onPress={() => router.back()}>
-              <Ionicons name="chevron-back" size={24} color="black"/>
-            </TouchableOpacity>
-          ),
-        }}
-      />
-
       {loading ? (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="small" color="#d903e4"/>
@@ -91,9 +57,10 @@ const MyRequestsScreen = () => {
           <Text style={styles.emptyText}>У вас пока нет заявок</Text>
         </View>
       ) : (
-        <FlatList
+        <FlashList
           data={requests}
           keyExtractor={(item) => item.id}
+          estimatedItemSize={100}
           renderItem={({item}) => (
             <RequestCard request={item}/>
           )}

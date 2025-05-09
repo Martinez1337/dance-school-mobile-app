@@ -5,31 +5,18 @@ import {KeyboardAwareScrollView} from "react-native-keyboard-aware-scroll-view";
 import {useRouter} from 'expo-router';
 import {Ionicons} from '@expo/vector-icons';
 import {MAX_DESCRIPTION_LENGTH} from "../../../../constants";
-import subscriptions from '../../../../scratch-data/subscriptions.json';
 import {useSelector} from "react-redux";
 
 const Profile = () => {
   const user = useSelector(state => state.user);
   const role = useSelector(state => state.session.role);
+  const subscriptions = useSelector(state => state.session.subscriptions);
   const levelName = useSelector(state => state.level.name);
   const router = useRouter();
 
   const [description, setDescription] = useState(user.description);
   const [isSaved, setIsSaved] = useState(false);
-  const [activeSubscriptions, setActiveSubscriptions] = useState(user.subscriptions);
-
-  useEffect(() => {
-    if (user.role === 'student') {
-      // Получаем активные подписки пользователя
-      const userSubscriptions = subscriptions
-        .filter(sub => 
-          sub.userId === user.userId && 
-          !sub.terminated &&
-          new Date(sub.endDate) > new Date()
-        );
-      setActiveSubscriptions(userSubscriptions);
-    }
-  }, []);
+  const [activeSubscriptions, setActiveSubscriptions] = useState(subscriptions?.filter(sub => sub.payment_id !== null));
 
   const handleSave = () => {
     console.log('Description saved:', description);
@@ -91,7 +78,7 @@ const Profile = () => {
             <Text style={styles.contactDataText}>{user.phone_number}</Text>
           </View>
 
-          {user.role === 'student' && (
+          {role === 'student' && (
             <View style={styles.subscriptionsSection}>
               <View style={styles.sectionHeader}>
                 <Text style={styles.sectionTitle}>Мои абонементы</Text>
@@ -104,28 +91,26 @@ const Profile = () => {
                 </TouchableOpacity>
               </View>
 
-              {/*{activeSubscriptions.length > 0 ? (*/}
-              {/*  <View style={styles.activeSubscriptions}>*/}
-              {/*    {activeSubscriptions.map((sub, index) => (*/}
-              {/*      <View key={sub.id} style={styles.subscriptionItem}>*/}
-              {/*        <View style={styles.subscriptionInfo}>*/}
-              {/*          <Text style={styles.subscriptionName}>{sub.name}</Text>*/}
-              {/*          <Text style={styles.subscriptionDate}>*/}
-              {/*            до {new Date(sub.endDate).toLocaleDateString('ru-RU')}*/}
-              {/*          </Text>*/}
-              {/*        </View>*/}
-              {/*        <Text style={styles.remainingLessons}>*/}
-              {/*          {typeof sub.lessonsCount === 'object' */}
-              {/*            ? `${sub.lessonsCount.group - (sub.usedLessons?.group || 0)} групп. + ${sub.lessonsCount.individual - (sub.usedLessons?.individual || 0)} инд.`*/}
-              {/*            : `${sub.lessonsCount - (sub.usedLessons || 0)} занятий`*/}
-              {/*          }*/}
-              {/*        </Text>*/}
-              {/*      </View>*/}
-              {/*    ))}*/}
-              {/*  </View>*/}
-              {/*) : (*/}
-              {/*  <Text style={styles.noSubscriptions}>Нет активных абонементов</Text>*/}
-              {/*)}*/}
+              {activeSubscriptions.length > 0 ? (
+                <View style={styles.activeSubscriptions}>
+                  {activeSubscriptions.map((sub) => (
+                    <View key={sub.id} style={styles.subscriptionItem}>
+                      <View style={styles.subscriptionInfo}>
+                        <Text style={styles.subscriptionName}>{sub.subscription_template.name}</Text>
+                        <Text style={styles.subscriptionDate}>
+                          до {sub?.expiration_date ?
+                          new Date(sub?.expiration_date).toLocaleDateString('ru-RU') : 'Не указано'}
+                        </Text>
+                      </View>
+                      <Text style={styles.remainingLessons}>
+                        {`Кол-во оставшихся занятий: ${sub.lessons_left}`}
+                      </Text>
+                    </View>
+                  ))}
+                </View>
+              ) : (
+                <Text style={styles.noSubscriptions}>Нет активных абонементов</Text>
+              )}
             </View>
           )}
 

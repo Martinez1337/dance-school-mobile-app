@@ -12,12 +12,22 @@ const SlotCard = ({ item, selectedSlot, onSlotPress }) => {
       }}
     >
       <View style={styles.slotHeader}>
-        <Text style={styles.slotTime}>{`${format(parseISO(item.startTime), 'HH:mm')} - ${format(parseISO(item.endTime), 'HH:mm')}`}</Text>
-        <Text style={styles.slotDanceType}>{item.danceType}</Text>
+        <Text style={styles.slotTime}>
+          {`${format(parseISO(item.start_time), 'HH:mm')} - ${format(parseISO(item.finish_time), 'HH:mm')}`}
+        </Text>
+        {/*<Text style={styles.slotDanceType}>{item}</Text>*/}
       </View>
       <View style={styles.slotFooter}>
-        <Image source={item.teacherImage} style={styles.teacherImage} />
-        <Text style={styles.teacherName}>{item.teacherName}</Text>
+        <Image
+          source={item?.teacher?.user?.photo_url}
+          style={styles.teacherImage}
+          placeholder={require("../assets/images/user-profile-placeholder.jpg")}
+          contentFit={'cover'}
+          placeholderContentFit={"cover"}
+        />
+        <Text style={styles.teacherName}>
+          {item?.teacher?.user?.last_name} {item?.teacher?.user?.first_name} {item?.teacher?.user?.middle_name}
+        </Text>
       </View>
     </TouchableOpacity>
   );

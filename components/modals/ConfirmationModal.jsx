@@ -1,29 +1,72 @@
 import { View, Text, Modal, StyleSheet, TouchableOpacity, TouchableWithoutFeedback } from 'react-native';
+import { Checkbox } from 'expo-checkbox';
+import { useState } from 'react';
 
-const ConfirmationModal = ({ visible, onClose, onConfirm, title, message, confirmText, cancelText }) => {
+const ConfirmationModal = ({ 
+  visible, 
+  onClose, 
+  onConfirm, 
+  title, 
+  message, 
+  confirmText, 
+  cancelText, 
+  askForNeighbours = false 
+}) => {
+  const [allowNeighbours, setAllowNeighbours] = useState(false);
+
+  const handleConfirm = () => {
+    if (askForNeighbours) {
+      onConfirm(allowNeighbours);
+      setAllowNeighbours(false);
+    } else {
+      onConfirm()
+    }
+  };
+
+  const handleClose = () => {
+    onClose();
+    setAllowNeighbours(false); // Сбрасываем значение при закрытии
+  };
+
   return (
     <Modal
       transparent={true}
       animationType="fade"
       visible={visible}
-      onRequestClose={onClose}
+      onRequestClose={handleClose}
     >
-      <TouchableWithoutFeedback onPress={onClose}>
+      <TouchableWithoutFeedback onPress={handleClose}>
         <View style={styles.modalContainer}>
           <TouchableWithoutFeedback>
             <View style={styles.modalView}>
               <Text style={styles.modalTitleText}>{title}</Text>
               <Text style={styles.modalText}>{message}</Text>
+              
+              {askForNeighbours && (
+                <TouchableOpacity 
+                  style={styles.checkboxContainer}
+                  onPress={() => setAllowNeighbours(!allowNeighbours)}
+                >
+                  <Checkbox
+                    value={allowNeighbours}
+                    onValueChange={setAllowNeighbours}
+                    color={allowNeighbours ? '#d903e4' : undefined}
+                    style={styles.checkbox}
+                  />
+                  <Text style={styles.checkboxLabel}>Разрешить соседей</Text>
+                </TouchableOpacity>
+              )}
+              
               <View style={styles.buttonsContainer}>
                 <TouchableOpacity 
                   style={styles.confirmButton} 
-                  onPress={onConfirm}
+                  onPress={handleConfirm}
                 >
                   <Text style={styles.buttonText}>{confirmText}</Text>
                 </TouchableOpacity>
                 <TouchableOpacity 
                   style={styles.cancelButton} 
-                  onPress={onClose}
+                  onPress={handleClose}
                 >
                   <Text style={styles.cancelButtonText}>{cancelText}</Text>
                 </TouchableOpacity>
@@ -70,6 +113,19 @@ const styles = StyleSheet.create({
     fontFamily: 'os-regular',
     lineHeight: 22,
     paddingHorizontal: 4,
+  },
+  checkboxContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 20,
+    alignSelf: 'flex-start',
+  },
+  checkbox: {
+    marginRight: 10,
+  },
+  checkboxLabel: {
+    fontSize: 16,
+    fontFamily: 'os-regular',
   },
   buttonsContainer: {
     flexDirection: 'row',

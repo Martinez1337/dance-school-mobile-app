@@ -1,44 +1,39 @@
 import { View, Text, StyleSheet, ScrollView, Animated } from 'react-native';
 import { Stack } from 'expo-router';
 import { useState, useEffect, useRef } from 'react';
-import { parseISO, isAfter } from 'date-fns';
-import { SubscriptionCard, ScrollIndicator } from '../../../../components';
+import {SubscriptionCard, ScrollIndicator, SubscriptionTemplateCard} from '../../../../components';
 import { SCREEN_WIDTH, SUBSCRIPTION_CARD_WIDTH, SUBSCRIPTION_CARD_SPACING } from '../../../../constants';
 
-import subscriptionTemplates from '../../../../scratch-data/subscription-templates.json';
-import subscriptions from '../../../../scratch-data/subscriptions.json';
+import {apiRequest, handleApiError} from "../../../../util/apiService";
+import {useSelector} from "react-redux";
+import {Ionicons} from "@expo/vector-icons";
+
+const fetchSubscriptionsTemplates = async () => {
+  try {
+    return await apiRequest({
+      method: 'POST',
+      url: '/subscriptionTemplates/search/full-info',
+      data: {
+        is_expired: false
+      }
+    })
+  } catch (e) {
+    handleApiError(e);
+  }
+}
 
 export default function SubscriptionsScreen() {
-  const [activeSubscriptions, setActiveSubscriptions] = useState([]);
-
-  const currentUserId = 'e1a5c879-9a1d-45c2-8f0d-d3442f2dcd1a';
-
+  const subscriptions = useSelector(state => state.session.subscriptions);
+  const [activeSubscriptions, setActiveSubscriptions] = useState(subscriptions.filter(sub => sub.payment_id !== null));
+  const [subscriptionTemplates, setSubscriptionTemplates] = useState([])
   const activeScrollX = useRef(new Animated.Value(0)).current;
   const availableScrollX = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    // Получаем активные подписки пользователя
-    const userSubscriptions = subscriptions
-      .filter(sub => 
-        sub.userId === currentUserId && 
-        !sub.terminated &&
-        isAfter(parseISO(sub.endTime), new Date())
-      )
-      .map(sub => {
-        const template = subscriptionTemplates.find(t => t.id === sub.templateId);
-        return {
-          ...template,
-          ...sub,
-          remainingLessons: typeof sub.lessonsCount === 'object' 
-            ? {
-                group: sub.lessonsCount.group - (sub.usedLessons?.group || 0),
-                individual: sub.lessonsCount.individual - (sub.usedLessons?.individual || 0)
-              }
-            : sub.lessonsCount - (sub.usedLessons || 0)
-        };
-      });
-
-    setActiveSubscriptions(userSubscriptions);
+    fetchSubscriptionsTemplates()
+      .then(response => {
+        setSubscriptionTemplates(response.subscription_templates)
+      })
   }, []);
 
   const handleSubscriptionPress = (subscription) => {
@@ -61,11 +56,21 @@ export default function SubscriptionsScreen() {
       >
         {items.map(item => (
           <View key={item.id} style={styles.cardWrapper}>
-            <SubscriptionCard
-              item={item}
-              isActive={isActive}
-              onPress={() => handleSubscriptionPress(item)}
-            />
+            {
+              item?.student_id ? (
+                <SubscriptionCard
+                  item={item}
+                  isActive={isActive}
+                  onPress={() => handleSubscriptionPress(item)}
+                />
+              ) : (
+                <SubscriptionTemplateCard
+                  item={item}
+                  isActive={isActive}
+                  onPress={() => handleSubscriptionPress(item)}
+                />
+              )
+            }
           </View>
         ))}
       </Animated.ScrollView>
@@ -86,16 +91,25 @@ export default function SubscriptionsScreen() {
         }}
       />
 
-      <ScrollView>
-        {activeSubscriptions.length > 0 && (
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{paddingBottom: 20, paddingTop: 20}}
+      >
+        {activeSubscriptions.length >= 0 && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Активные абонементы</Text>
+            <View style={[styles.sectionTitle, {backgroundColor: '#9cf393',}]}>
+              <Ionicons name={'bag-check-outline'} size={50} color="#000"/>
+              <Text style={styles.sectionTitleText}>Активные абонементы</Text>
+            </View>
             {renderSubscriptionList(activeSubscriptions, activeScrollX, true)}
           </View>
         )}
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Доступные абонементы</Text>
+          <View style={[styles.sectionTitle, {backgroundColor: '#efadf3',}]}>
+            <Ionicons name={'cash-outline'} size={50} color="#000"/>
+            <Text style={styles.sectionTitleText}>Доступные абонементы</Text>
+          </View>
           {renderSubscriptionList(subscriptionTemplates, availableScrollX)}
         </View>
       </ScrollView>
@@ -109,14 +123,21 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
   },
   section: {
-    paddingVertical: 20,
-    marginTop: 20,
+    paddingVertical: 10
   },
   sectionTitle: {
+    borderRadius: 50,
+    marginHorizontal: 30,
+    paddingVertical: 5,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+  sectionTitleText: {
     fontSize: 20,
     fontWeight: 'bold',
-    marginBottom: 20,
-    paddingHorizontal: 16,
+    marginBottom: 5,
+    marginLeft: 10,
     fontFamily: 'os-bold',
     textAlign: 'center',
   },
@@ -126,7 +147,7 @@ const styles = StyleSheet.create({
   },
   cardWrapper: {
     width: SUBSCRIPTION_CARD_WIDTH,
-    marginVertical: 10,
+    marginVertical: 5,
   },
 });
  

@@ -1,13 +1,19 @@
-import {View, Text, StyleSheet, ScrollView, Image, TouchableOpacity, Alert, ActivityIndicator} from 'react-native';
-import {useLocalSearchParams, router, Stack} from 'expo-router';
-import React, {useEffect, useState} from 'react';
+import {View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, ActivityIndicator} from 'react-native';
+import {useLocalSearchParams, router, Stack, useFocusEffect} from 'expo-router';
+import React, {useCallback, useEffect, useState} from 'react';
 import {FlashList} from '@shopify/flash-list';
 import {Ionicons} from '@expo/vector-icons';
 import {format, parseISO} from 'date-fns';
 import {useSelector} from "react-redux";
 import {ru} from 'date-fns/locale';
 
-import {TeacherCard, TeacherProfileModal, ConfirmationModal, SubscriptionSelectionModal, StudentCard} from '../../../../components';
+import {
+  TeacherCard,
+  TeacherProfileModal,
+  ConfirmationModal,
+  SubscriptionSelectionModal,
+  StudentCard
+} from '../../../../components';
 import {apiRequest, handleApiError} from "../../../../util/apiService";
 
 const parseTime = (timeData) => format(parseISO(timeData), 'HH:mm', {locale: ru});
@@ -24,13 +30,38 @@ const fetchLesson = async (id) => {
   }
 }
 
+const cancelLesson = async (subId, lessonId) => {
+  try {
+    return await apiRequest({
+      method: 'PATCH',
+      url: `/subscriptions/lessons/cancel/${subId}/${lessonId}`,
+    })
+  } catch (error) {
+    handleApiError(error)
+  }
+}
+
+const joinLesson = async (subId, lessonId) => {
+  try {
+    const response = await apiRequest({
+      method: 'POST',
+      url: `/subscriptions/lessons/${subId}/${lessonId}`,
+    })
+
+    return !!response
+  } catch (error) {
+    handleApiError(error)
+    return false;
+  }
+}
+
+
+
 const LessonScreen = () => {
   const {id} = useLocalSearchParams();
 
   const userSession = useSelector(state => state.session);
   const [role, setRole] = useState(userSession.role);
-  const [userSubscriptions, setUserSubscriptions] = useState(userSession.subscriptions);
-  const [selectedSubscription, setSelectedSubscription] = useState(null);
 
   const [isLoading, setIsLoading] = useState(true)
   const [lessonData, setLessonData] = useState(null);
@@ -47,16 +78,16 @@ const LessonScreen = () => {
 
   useEffect(() => {
     setRole(userSession.role);
-    setUserSubscriptions(userSession.subscriptions);
   }, [userSession])
 
-  useEffect(() => {
+  useFocusEffect(useCallback(() => {
+    console.log(id)
     fetchLesson(id)
       .then((result) => {
         setLessonData(result)
         setIsLoading(false)
       })
-  }, []);
+  }, []))
 
   useEffect(() => {
     if (!lessonData) {
@@ -65,13 +96,9 @@ const LessonScreen = () => {
 
     if (lessonData.group && role === "student") {
       const isCurrentStudentParticipating = lessonData.actual_students
-        .some(student => student.id === userSession.id)
-      const hasSubscription = lessonData.subscription_templates.some(template =>
-        userSession.subscriptions.some(sub =>
-          sub.subscription_template.id === template.id
-        )
-      );
-      const isCurrentStudentInGroup = lessonData.group.students.some(student => student.id === userSession.id)
+        ?.some(student => student.id === userSession.id)
+      const hasSubscription = lessonData.fitting_subscriptions?.length > 0;
+      const isCurrentStudentInGroup = lessonData.group.students?.some(student => student.id === userSession.id)
 
       setIsParticipating(isCurrentStudentParticipating)
       setHasValidSubscription(hasSubscription)
@@ -87,12 +114,6 @@ const LessonScreen = () => {
     )
   }
 
-  const handleCancelLesson = () => {
-    console.log('Cancelling lesson for group:', lessonData.group.id);
-    setCancelModalVisible(false);
-    // Здесь будет логика отмены занятия
-  };
-
   const handleGoToSubscriptions = () => {
     router.push('/(app)/(shared)/subscriptions');
   };
@@ -103,24 +124,42 @@ const LessonScreen = () => {
     }
   };
   
-  const handleOpenSubscriptionModal = () => {
-    setSubscriptionModalVisible(true);
+  const handleSelectSubscription = async (subscription) => {
+    const success = await joinLesson(subscription.id, lessonData.id);
+    if (success) {
+      Alert.alert(
+        "Участие подтверждено",
+        `Вы будете участвовать в занятии используя выбранный абонемент`,
+        [{ text: "ОК" }]
+      );
+      fetchLesson(id).then((result) => setLessonData(result))
+    } else {
+      Alert.alert(
+        "Ошибка",
+        `Не удалось записаться на занятия используя выбранный абонемент`,
+        [{ text: "ОК" }]
+      );
+    }
   };
-  
-  const handleSelectSubscription = (subscription) => {
-    setSelectedSubscription(subscription);
-    setIsParticipating(true);
-    
-    // Здесь будет логика сохранения участия в занятии с выбранным абонементом
+
+  const handleCancelLesson = async () => {
+    console.log('Cancelling lesson for group:', lessonData.group.id);
+    setCancelModalVisible(false);
+    await cancelLesson(lessonData.used_subscription?.id, lessonData.id);
     Alert.alert(
-      "Участие подтверждено",
-      `Вы будете участвовать в занятии используя абонемент ${subscription.id}`,
+      "Участие отменено",
+      `Вы отменили участие в занятии с использованием выбранного абонемента`,
       [{ text: "ОК" }]
     );
+    fetchLesson(id).then((result) => setLessonData(result))
   };
 
   return (
-    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+    <ScrollView
+      style={styles.container}
+      showsVerticalScrollIndicator={false}
+      contentContainerStyle={{paddingBottom: 20, paddingTop: 5}}
+    >
       <Stack.Screen
         options={{
           title: "Информация о занятии",
@@ -171,7 +210,7 @@ const LessonScreen = () => {
         <View style={styles.infoRow}>
           <Text style={styles.label}>Время:</Text>
           <Text style={styles.value}>
-            {`${parseTime(lessonData.start_time)} - ${parseTime(lessonData.finish_time)}`}
+            {`${parseTime(lessonData?.start_time)} - ${parseTime(lessonData?.finish_time)}`}
           </Text>
         </View>
 
@@ -179,7 +218,7 @@ const LessonScreen = () => {
           <Text style={styles.label}>Зал:</Text>
           <View style={styles.groupNameContainer}>
             <Text style={styles.value}>
-              {lessonData.classroom.name}
+              {lessonData.classroom?.name}
             </Text>
             {
               lessonData.are_neighbours_allowed &&
@@ -195,9 +234,9 @@ const LessonScreen = () => {
             <Ionicons name="checkmark-circle" size={24} color="#4CAF50" />
             <Text style={styles.participatingText}>Вы будете участвовать в занятии</Text>
           </View>
-          {selectedSubscription && (
+          {lessonData.used_subscription && (
             <Text style={styles.participatingDetails}>
-              Абонемент: {selectedSubscription.name}
+              Абонемент: {lessonData.used_subscription.subscription_template?.name}
             </Text>
           )}
         </View>
@@ -224,7 +263,7 @@ const LessonScreen = () => {
         </View>
       )}
 
-      {!isParticipating && !hasValidSubscription && role === 'student' && (
+      {lessonData.lesson_type.is_group && !isParticipating && !hasValidSubscription && role === 'student' && (
         <View style={styles.buttonContainer}>
           <TouchableOpacity
             style={styles.button}
@@ -294,18 +333,18 @@ const LessonScreen = () => {
         )}
       </View>
 
-      {!isParticipating && role === 'student' && (
+      {lessonData.lesson_type.is_group && isStudentInGroup && !isParticipating && role === 'student' && (
         <View style={styles.buttonContainer}>
           <TouchableOpacity
             style={styles.participateButton}
-            onPress={handleOpenSubscriptionModal}
+            onPress={() => setSubscriptionModalVisible(true)}
           >
             <Text style={styles.buttonText}>Буду участвовать</Text>
           </TouchableOpacity>
         </View>
       )}
 
-      {isParticipating && role === 'student' && (
+      {isParticipating && isStudentInGroup && role === 'student' && (
         <View style={styles.buttonContainer}>
           <TouchableOpacity
             style={styles.cancelButton}
@@ -321,19 +360,18 @@ const LessonScreen = () => {
         onClose={async () => await setCancelModalVisible(false)}
         onConfirm={handleCancelLesson}
         title="Отмена занятия"
-        message="Вы уверены, что хотите отменить это занятие? Это действие нельзя будет отменить."
+        message="Вы уверены, что хотите отменить это занятие?"
         confirmText="Да, отменить"
         cancelText="Нет, вернуться"
       />
 
-      {/*<SubscriptionSelectionModal*/}
-      {/*  visible={subscriptionModalVisible}*/}
-      {/*  onClose={() => setSubscriptionModalVisible(false)}*/}
-      {/*  onSelect={handleSelectSubscription}*/}
-      {/*  title="Выберите абонемент для занятия"*/}
-      {/*  subscriptions={userSubscriptions}*/}
-      {/*  lessonType={lessonData.lessonType === "Group" ? "group" : "individual"}*/}
-      {/*/>*/}
+      <SubscriptionSelectionModal
+        visible={subscriptionModalVisible}
+        onClose={() => setSubscriptionModalVisible(false)}
+        onSelect={handleSelectSubscription}
+        title="Выберите абонемент для занятия"
+        subscriptions={lessonData.fitting_subscriptions}
+      />
     </ScrollView>
   );
 }

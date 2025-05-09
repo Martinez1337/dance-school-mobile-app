@@ -2,7 +2,7 @@ import React, {useCallback, useEffect, useState} from 'react';
 import {View, Text, StyleSheet, SafeAreaView, TouchableOpacity} from 'react-native';
 import {FlashList} from "@shopify/flash-list";
 import {format, parseISO, isAfter} from 'date-fns';
-import {formatInTimeZone, fromZonedTime} from 'date-fns-tz';
+import {formatInTimeZone} from 'date-fns-tz';
 import {ru} from "date-fns/locale";
 import {Ionicons} from '@expo/vector-icons';
 import {router, Tabs} from 'expo-router';
@@ -10,19 +10,10 @@ import {useSelector} from "react-redux";
 
 import {CustomCalendar, LessonListItem} from "../../../components";
 import {apiRequest, handleApiError} from "../../../util/apiService";
+import {getDatesMonthInterval} from "../../../util/dates";
 
 const fetchLessons = async (role, date) => {
-  const dateFrom = fromZonedTime(date, 'UTC')
-  // Устанавливаем dateFrom на начало текущего месяца
-  dateFrom.setUTCDate(1);
-  dateFrom.setUTCHours(0, 0, 0, 0);
-
-  const dateTo = new Date(dateFrom);
-  // Устанавливаем dateTo на конец текущего месяца
-  dateTo.setUTCMonth(dateFrom.getUTCMonth() + 1);
-  dateTo.setUTCDate(0);
-  dateTo.setUTCHours(23, 59, 59, 999);
-
+  const {dateFrom, dateTo} = getDatesMonthInterval(date)
   try {
     return await apiRequest({
       method: 'POST',
@@ -30,8 +21,9 @@ const fetchLessons = async (role, date) => {
         ? '/lessons/search/student'
         : '/lessons/search/teacher',
       data: {
-        date_from: dateFrom.toISOString(),
-        date_to: dateTo.toISOString(),
+        date_from: dateFrom,
+        date_to: dateTo,
+        is_confirmed: true
       }
     })
   } catch (error) {
@@ -66,7 +58,6 @@ const TimeTableTab = () => {
           marks[date] = {marked: true, dotColor: "#d903e4"};
         }
       });
-
       // Фильтруем занятия по выбранной дате
       const filtered = lessons.filter(lesson =>
         format(parseISO(lesson.start_time), 'yyyy-MM-dd') === selectedDate
@@ -106,9 +97,9 @@ const TimeTableTab = () => {
     const date = new Date(parseISO(dateData.dateString));
     date.setUTCDate(1);
 
-    const dateSting = formatInTimeZone(date, 'UTC', 'yyyy-MM-dd');
-    setSelectedDate(dateSting);
-    fetchLessons(role, dateSting)
+    const dateString = formatInTimeZone(date, 'UTC', 'yyyy-MM-dd');
+    setSelectedDate(dateString);
+    fetchLessons(role, dateString)
       .then((result) => setLessons(result.lessons));
   }, [])
 

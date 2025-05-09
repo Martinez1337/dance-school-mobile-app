@@ -19,7 +19,3 @@ export function sortEventData(data, searchText, searchTags) {
 
   return filteredEvents;
 }
-
-export function filterLessonsByDate(lessonsData, selectedDate) {
-  return lessonsData.filter(lesson => isSameDay(parseISO(lesson.startTime), parseISO(selectedDate)));
-}

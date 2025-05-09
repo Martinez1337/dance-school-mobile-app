@@ -11,8 +11,8 @@ import {
 } from 'react-native';
 import {Ionicons} from '@expo/vector-icons';
 import {format, parseISO} from 'date-fns';
-import {fromZonedTime} from "date-fns-tz";
 import {ru} from 'date-fns/locale';
+import {router} from "expo-router";
 
 const SubscriptionSelectionModal = ({
   visible,
@@ -20,38 +20,20 @@ const SubscriptionSelectionModal = ({
   onSelect,
   title = 'Выберите абонемент',
   subscriptions = [],
-  lessonType,
 }) => {
-  const [filteredSubscriptions, setFilteredSubscriptions] = useState([]);
-
-  useEffect(() => {
-    // Фильтруем абонементы по типу занятия
-    const filtered = subscriptions.filter(sub => {
-      const now = new Date();
-      const endDate = fromZonedTime(sub.expiration_date);
-      
-      // Подходит, если не просрочен и не отменен и совпадает тип занятия
-      const isValidSub = endDate > now && !sub.terminated;
-      const isMatchingType = sub.lessonType.toLowerCase() === lessonType.toLowerCase() || 
-                            sub.lessonType.toLowerCase() === 'combined';
-      
-      return isValidSub && isMatchingType;
-    });
-    
-    setFilteredSubscriptions(filtered);
-  }, [subscriptions, lessonType]);
-
   const getSubscriptionTitle = (subscription) => {
-    // Получаем название абонемента
-    return subscription?.name || `Абонемент №${subscription.id.split('-')[1]}`;
+    return subscription?.subscription_template?.name || `Абонемент №${subscription.id.split('-')[1]}`;
   };
 
   const getSubscriptionDetails = (subscription) => {
-    // Форматируем даты для отображения
-    const startDate = format(parseISO(subscription.startTime), 'dd MMMM yyyy', {locale: ru});
-    const endDate = format(parseISO(subscription.endTime), 'dd MMMM yyyy', {locale: ru});
-    
-    return `Действует до ${endDate}`;
+    let endDate;
+
+    if (subscription?.expiration_date) {
+      endDate = format(parseISO(subscription?.expiration_date), 'dd MMMM yyyy', {locale: ru});
+      return `Действует до ${endDate}`;
+    }
+
+    return `Не указан срок действия`;
   };
 
   return (
@@ -69,15 +51,14 @@ const SubscriptionSelectionModal = ({
           </TouchableOpacity>
         </View>
 
-        {filteredSubscriptions.length === 0 ? (
+        {subscriptions?.length === 0 ? (
           <View style={styles.emptyContainer}>
             <Text style={styles.emptyText}>У вас нет подходящих абонементов{'\n'}для этого занятия</Text>
             <TouchableOpacity 
               style={styles.buyButton}
               onPress={() => {
                 onClose();
-                // Здесь будет навигация на экран покупки абонементов
-                Alert.alert('Переход', 'Переход на экран покупки абонементов');
+                router.push('/(app)/(shared)/subscriptions');
               }}
             >
               <Text style={styles.buyButtonText}>Приобрести абонемент</Text>
@@ -85,7 +66,7 @@ const SubscriptionSelectionModal = ({
           </View>
         ) : (
           <FlatList
-            data={filteredSubscriptions}
+            data={subscriptions}
             keyExtractor={(item) => item.id}
             renderItem={({item}) => (
               <TouchableOpacity
@@ -98,11 +79,17 @@ const SubscriptionSelectionModal = ({
                 <View style={styles.itemContent}>
                   <Text style={styles.itemTitle}>{getSubscriptionTitle(item)}</Text>
                   <Text style={styles.itemDetails}>{getSubscriptionDetails(item)}</Text>
+                  <Text style={styles.itemDetails}>Осталось занятий: {item?.lessons_left}</Text>
                   <View style={styles.subscriptionTypeContainer}>
-                    <Text style={styles.subscriptionType}>
-                      {item.lessonType === 'group' ? 'Групповой' : 
-                       item.lessonType === 'individual' ? 'Индивидуальный' : 'Комбинированный'}
-                    </Text>
+                    {
+                      item?.subscription_template?.lesson_types?.map(type => (
+                        <View key={type.id} style={styles.subscriptionTypeTag}>
+                          <Text style={styles.subscriptionType}>
+                            {type?.dance_style?.name}
+                          </Text>
+                        </View>
+                      ))
+                    }
                   </View>
                 </View>
                 <Ionicons name="chevron-forward" size={24} color="#ccc" />
@@ -164,6 +151,11 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   subscriptionTypeContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 5
+  },
+  subscriptionTypeTag: {
     alignSelf: 'flex-start',
     backgroundColor: 'rgba(217, 3, 228, 0.1)',
     paddingHorizontal: 8,
