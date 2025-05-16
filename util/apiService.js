@@ -1,11 +1,11 @@
 import axios from 'axios';
 import Constants from 'expo-constants'
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import {Alert} from "react-native";
+import {Alert, Platform} from "react-native";
 
 // Создаем экземпляр axios с настройками по умолчанию
 const apiClient = axios.create({
-  baseURL: Constants.expoConfig.extra.API_URL,
+  baseURL: Platform.OS === "android" ? Constants.expoConfig.extra.API_URL_ANDROID : Constants.expoConfig.extra.API_URL_IOS,
   timeout: 10000,
   headers: {
     'accept': 'application/json'
