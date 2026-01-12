@@ -2,7 +2,7 @@ import React, {useState, useEffect} from 'react';
 import {View, Text, StyleSheet, SafeAreaView, TextInput, TouchableOpacity} from 'react-native';
 import {Image} from 'expo-image';
 import {KeyboardAwareScrollView} from "react-native-keyboard-aware-scroll-view";
-import {useRouter} from 'expo-router';
+import {Link, useRouter} from 'expo-router';
 import {Ionicons} from '@expo/vector-icons';
 import {MAX_DESCRIPTION_LENGTH} from "../../../../constants";
 import {useSelector} from "react-redux";
@@ -14,20 +14,8 @@ const Profile = () => {
   const levelName = useSelector(state => state.level.name);
   const router = useRouter();
 
-  const [description, setDescription] = useState(user.description);
-  const [isSaved, setIsSaved] = useState(false);
   const [activeSubscriptions, setActiveSubscriptions] = useState(subscriptions?.filter(sub => sub.payment_id !== null));
 
-  const handleSave = () => {
-    console.log('Description saved:', description);
-  };
-
-  const handleDescriptionChange = (text) => {
-    if (text.length <= MAX_DESCRIPTION_LENGTH) {
-      setDescription(text);
-      setIsSaved(false);
-    }
-  };
 
   const handleGoToSubscriptions = () => {
     router.push('/(app)/(shared)/subscriptions');
@@ -47,7 +35,7 @@ const Profile = () => {
           <View style={styles.profileImageContainer}>
             <Image
               style={styles.profileImage}
-              source={user.photo}
+              source={user.photo_url}
               placeholder={require("../../../../assets/images/user-profile-placeholder.jpg")}
               contentFit={'cover'}
               placeholderContentFit={"cover"}
@@ -76,6 +64,15 @@ const Profile = () => {
           <View style={styles.contactDataLine}>
             <Ionicons name="call-outline" size={24} color="black"/>
             <Text style={styles.contactDataText}>{user.phone_number}</Text>
+          </View>
+
+          <View style={styles.contactDataLine}>
+            <Ionicons name="chatbubble-outline" size={24} color="black"/>
+            {
+              user.messenger_url
+                ? <Link style={styles.contactDataText} href={user.messenger_url}>{user.messenger_url}</Link>
+                : <Text style={styles.contactDataText}>Не указано</Text>
+            }
           </View>
 
           {role === 'student' && (
@@ -117,26 +114,10 @@ const Profile = () => {
           <Text style={styles.descriptionTitleText}>Описание</Text>
 
           <View style={styles.descriptionContainer}>
-            <TextInput
-              style={styles.descriptionField}
-              value={user.description}
-              onChangeText={handleDescriptionChange}
-              placeholder="Введите описание"
-              multiline={true}
-            />
+            <Text style={styles.descriptionField}>{user.description}</Text>
             <Text style={styles.charCount}>
               {user.description ? user.description.length : '0'} / {MAX_DESCRIPTION_LENGTH}
             </Text>
-          </View>
-
-          <View style={styles.saveButtonContainer}>
-            <TouchableOpacity
-              style={styles.saveButton}
-              onPress={handleSave}
-              disabled={isSaved}
-            >
-              <Text style={styles.saveButtonText}>{isSaved ? "Сохранено" : "Сохранить изменения"}</Text>
-            </TouchableOpacity>
           </View>
         </View>
       </KeyboardAwareScrollView>
@@ -200,7 +181,8 @@ const styles = StyleSheet.create({
     padding: 10,
     borderColor: "rgba(158, 150, 150, .5)",
     borderWidth: 1,
-    borderRadius: 10
+    borderRadius: 10,
+    height: 200
   },
   descriptionField: {
     height: 200,

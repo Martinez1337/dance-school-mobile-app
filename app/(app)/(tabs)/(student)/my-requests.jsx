@@ -1,23 +1,9 @@
 import React, {useState, useEffect} from 'react';
-import {View, Text, StyleSheet, SafeAreaView, FlatList, ActivityIndicator, TouchableOpacity} from 'react-native';
-import {Stack, useRouter} from 'expo-router';
+import {View, Text, StyleSheet, SafeAreaView, ActivityIndicator} from 'react-native';
 import {useSelector} from 'react-redux';
 import {RequestCard} from '../../../../components';
-import {Ionicons} from "@expo/vector-icons";
 import {apiRequest, handleApiError} from "../../../../util/apiService";
 import {FlashList} from "@shopify/flash-list";
-
-// Заглушка для тестирования
-const mockRequests = [
-  {
-    id: '2',
-    type: 'individual',
-    status: 'approved',
-    teacherName: 'Петрова Анна',
-    danceStyle: 'Вальс',
-    createdAt: '2024-04-25T14:30:00Z',
-  }
-];
 
 const fetchLessonRequests = async () => {
   try {

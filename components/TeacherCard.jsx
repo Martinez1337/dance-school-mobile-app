@@ -10,7 +10,7 @@ const TeacherCard = ({ teacher, onPress }) => {
     >
       <Image
         style={styles.teacherPhoto}
-        source={{ uri: teacher.photo }}
+        source={{ uri: teacher.user.photo_url }}
         placeholder={require("../assets/images/user-profile-placeholder.jpg")}
         contentFit={'cover'}
         placeholderContentFit={"cover"}

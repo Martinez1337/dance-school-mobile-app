@@ -14,6 +14,11 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
+      "infoPlist": {
+        "NSAppTransportSecurity": {
+          "NSAllowsArbitraryLoads": true
+        }
+      },
       "supportsTablet": true
     },
     "android": {
@@ -30,14 +35,25 @@
     },
     "plugins": [
       "expo-router",
-      "expo-font"
+      "expo-font",
+      ["expo-build-properties", {
+        "android": {
+          "usesCleartextTraffic": true
+        }
+      }]
     ],
     "experiments": {
       "typedRoutes": true
     },
     "extra": {
-      "API_URL_IOS": "http://localhost:8000",
-      "API_URL_ANDROID": "http://10.0.2.2:8000"
+      "API_URL_IOS": "http://176.108.251.206:8000",
+      "API_URL_ANDROID": "http://176.108.251.206:8000",
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "3f437868-2026-49b3-8fc4-6d903f043193"
+      }
     }
   }
 }

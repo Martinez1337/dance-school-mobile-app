@@ -95,7 +95,7 @@ export default function SubscriptionsScreen() {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{paddingBottom: 20, paddingTop: 20}}
       >
-        {activeSubscriptions.length >= 0 && (
+        {activeSubscriptions.length > 0 && (
           <View style={styles.section}>
             <View style={[styles.sectionTitle, {backgroundColor: '#9cf393',}]}>
               <Ionicons name={'bag-check-outline'} size={50} color="#000"/>

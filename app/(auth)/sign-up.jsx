@@ -29,6 +29,7 @@ const onSubmitHandler = async (values) => {
         description: values.description,
         level_id: values.level,
         password: values.password,
+        messenger_url: values.messengerLink
       },
       requiresAuth: false,
     });
@@ -87,6 +88,7 @@ const SignUp = () => {
             lastName: "",
             middleName: "",
             email: "",
+            messengerLink: "",
             description: "",
             phoneNumber: "",
             password: "",
@@ -144,6 +146,16 @@ const SignUp = () => {
               <FormField
                 field="email"
                 label="Электронная почта"
+                values={values}
+                touched={touched}
+                errors={errors}
+                handleChange={handleChange}
+                handleBlur={handleBlur}
+              />
+
+              <FormField
+                field="messengerLink"
+                label="Ссылка на мессенджер"
                 values={values}
                 touched={touched}
                 errors={errors}

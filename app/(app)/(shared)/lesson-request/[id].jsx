@@ -1,7 +1,7 @@
 import React, {useEffect, useState} from 'react';
 import {View, Text, StyleSheet, SafeAreaView, TouchableOpacity, ScrollView} from 'react-native';
 import {Image} from 'expo-image';
-import {Stack, useLocalSearchParams, router} from 'expo-router';
+import {Stack, useLocalSearchParams, router, Link} from 'expo-router';
 import {format, parseISO} from 'date-fns';
 import {ru} from 'date-fns/locale';
 import {Ionicons} from '@expo/vector-icons';
@@ -123,6 +123,14 @@ const LessonRequestScreen = () => {
               {format(parseISO(requestData.start_time), 'd MMMM, HH:mm', {locale: ru})} -
               {format(parseISO(requestData.finish_time), ' HH:mm', {locale: ru})}
             </Text>
+          </View>
+          <View style={styles.infoRow}>
+            <Ionicons name="chatbubble-outline" size={24} color="#666"/>
+            {
+              student.user.messenger_url
+                ? <Link style={[styles.infoText, {color: "#4484f5"}]} href={student.user.messenger_url}>{student.user.messenger_url}</Link>
+                : <Text style={styles.infoText}>Не указано</Text>
+            }
           </View>
         </View>
 

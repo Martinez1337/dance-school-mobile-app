@@ -7,7 +7,9 @@ const initialState = {
   last_name: '',
   email: '',
   phone_number: '',
-  description: ''
+  description: '',
+  messenger_url: '',
+  photo_url: ''
 };
 
 const userSlice = createSlice({
@@ -22,7 +24,9 @@ const userSlice = createSlice({
         last_name,
         email,
         phone_number,
-        description
+        description,
+        messenger_url,
+        photo_url,
       } = action.payload;
       state.id = id;
       state.first_name = first_name;
@@ -31,6 +35,8 @@ const userSlice = createSlice({
       state.email = email;
       state.phone_number = phone_number;
       state.description = description;
+      state.messenger_url = messenger_url;
+      state.photo_url = photo_url;
     },
     clearUser(state) {
       return initialState;

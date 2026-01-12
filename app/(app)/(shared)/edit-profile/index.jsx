@@ -65,6 +65,7 @@ const EditProfileScreen = () => {
                   last_name: values.last_name,
                   middle_name: values.middle_name,
                   description: values.description,
+                  messenger_url: values.messenger_url,
                   ...(values.email !== user.email && {email: values.email}),
                   ...(values.phone_number !== user.phone_number && {phone_number: values.phone_number}),
                   ...(role === 'student' && {level_id: selectedLevel})
@@ -140,6 +141,7 @@ const EditProfileScreen = () => {
               email: user.email,
               phone_number: user.phone_number,
               description: user.description,
+              messenger_url: user.messenger_url,
             }}
             onSubmit={handleSaveProfile}
             validationSchema={editUserInfoValidationSchema}
@@ -190,6 +192,16 @@ const EditProfileScreen = () => {
                 <FormField
                   field="email"
                   label="Электронная почта"
+                  values={values}
+                  touched={touched}
+                  errors={errors}
+                  handleChange={handleChange}
+                  handleBlur={handleBlur}
+                />
+
+                <FormField
+                  field="messenger_url"
+                  label="Ссылка на мессенджер"
                   values={values}
                   touched={touched}
                   errors={errors}

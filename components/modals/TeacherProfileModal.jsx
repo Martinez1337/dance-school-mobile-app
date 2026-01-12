@@ -1,6 +1,8 @@
 import { View, Text, Modal, StyleSheet, ScrollView, TouchableOpacity, TouchableWithoutFeedback } from 'react-native';
 import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
+import {Link} from "expo-router";
+import React from "react";
 
 const TeacherProfileModal = ({ visible, onClose, teacher }) => {
   if (!teacher) return null;
@@ -17,17 +19,17 @@ const TeacherProfileModal = ({ visible, onClose, teacher }) => {
         <View style={styles.teacherProfileModalContainer}>
           <TouchableWithoutFeedback onPress={() => {}}>
             <View style={styles.teacherProfileModalView}>
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={styles.closeButton}
                 onPress={onClose}
               >
                 <Ionicons name="close" size={24} color="black" />
               </TouchableOpacity>
 
-              <ScrollView style={styles.profileScrollView}>
+              <ScrollView style={styles.profileScrollView} showsVerticalScrollIndicator={false}>
                 <View style={styles.header}>
                   <Image
-                    source={{ uri: teacher.user.photo }}
+                    source={{ uri: teacher.user.photo_url }}
                     style={styles.profileImage}
                     placeholder={require("../../assets/images/user-profile-placeholder.jpg")}
                     contentFit={'cover'}
@@ -50,6 +52,14 @@ const TeacherProfileModal = ({ visible, onClose, teacher }) => {
                     <Text style={styles.infoText}>
                       {teacher.user.phone_number || 'Не указан'}
                     </Text>
+                  </View>
+                  <View style={styles.infoItem}>
+                    <Ionicons name="chatbubble-outline" size={24} color="#666"/>
+                    {
+                      teacher.user.messenger_url
+                        ? <Link style={[styles.infoText, {color: "#4484f5"}]} href={teacher.user.messenger_url}>{teacher.user.messenger_url}</Link>
+                        : <Text style={styles.infoText}>Не указано</Text>
+                    }
                   </View>
                 </View>
 

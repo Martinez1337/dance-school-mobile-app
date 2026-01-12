@@ -64,6 +64,7 @@ export const globalStyles = StyleSheet.create({
   },
   submitButton: {
     marginTop: 20,
+    marginBottom:40,
     backgroundColor: "#d903e4",
     padding: 15,
     borderRadius: 15,
